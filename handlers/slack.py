@@ -66,7 +66,7 @@ class Handler(BaseHandler):
             if p not in self.bot.get_config(self.config_section, 'owners').split():
                 added_owners.append(p)
         if added_owners:
-            self.post_message('#security_logs', '@here Usuários adicionados como OWNER na org {}: {}'.format(self.org['team']['name'], ', '.join(added_owners)))
+            self.post_message('#security_logs', '5'.format(self.org['team']['name'], ', '.join(added_owners)))
             self.bot.write_config(self.config_section, 'owners', ' '.join(owners_list))
         if removed_owners:
             self.post_message('#security_logs', '@here Usuários removidos como OWNER da org {}: {}'.format(self.org['team']['name'], ', '.join(removed_owners)))
@@ -172,7 +172,7 @@ class Handler(BaseHandler):
                 elif command == 'list nomfa':
                     members = self.slack.api_call('users.list')['members']
                     nomfa = [x['name'] for x in members if x.get('has_2fa') == False]
-                    self.post_message(channel, '@{} Usuários sem MFA: {}\nUsuários com permissão de não ter MFA: {}'.format(user_handle, ', '.join(nomfa), ', '.join(self.bot.get_config(self.config_section, 'nomfa').split())))
+                    self.post_message(channel, '@{} 4 {}\nUsuários com permissão de não ter MFA: {}'.format(user_handle, ', '.join(nomfa), ', '.join(self.bot.get_config(self.config_section, 'nomfa').split())))
 
                 self.set_job_status('Finished')
                 self.set_job_end(datetime.now())

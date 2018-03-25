@@ -17,6 +17,9 @@ class Handler(BaseHandler):
         (['{prefix} (?P<account>\S+) (?P<region>\S+) (?P<command>whois) (?P<name>\S+)'], 'Obtém os IPs das máquinas com a role <name>'),
         (['{prefix} (?P<command>findip) (?P<address>\S+)'], 'Obtém a role da máquina <address> em todas as regiões de todas as contas'),
         (['{prefix} (?P<command>find) (?P<name>\S+)'], 'Obtém os IPs das máquinas com a role <name> em todas as regiões de todas as contas'),
+        (['{prefix} (?P<account>\S+) (?P<region>\S+) (?P<command>waf block) (?P<addresses>.*)'], 'Bloqueia IPs no WAF'),
+        (['{prefix} (?P<account>\S+) (?P<region>\S+) (?P<command>waf unblock) (?P<addresses>.*)'], 'Desbloqueia IPs no WAF'),
+        (['{prefix} (?P<account>\S+) (?P<region>\S+) (?P<command>waf list)'], 'Lista os IPs bloqueados no WAF'),
     ]
 
 
@@ -125,6 +128,112 @@ class Handler(BaseHandler):
                     for instance in instances.keys():
                         msg += '{} - {}\n'.format(instance, instances[instance])
                     self.post_message(channel, text=msg)
+
+                elif command == 'waf block':
+                    if not self.authorized(handle, 'WAF'):
+                        self.set_job_status('Unauthorized')
+                        self.post_message(channel=channel, text='@{} Unauthorized'.format(handle))
+                        return False
+                    else:
+
+                        session = boto3.Session(region_name=region, profile_name=account)
+
+                        waf = session.client('waf-regional')
+
+                        sets = waf.list_ip_sets()
+
+                        set_id = None
+
+                        for s in sets['IPSets']:
+                            if s['Name'] == 'DoS Originators':
+                                set_id = s['IPSetId']
+                                break
+                        else:
+                            self.post_message(channel, text='@{} IP Set "DoS Originators" não encontrado'.format(handle))
+                            return
+
+
+                        s = waf.get_ip_set(IPSetId=set_id)
+
+                        ips = [x['Value'] for x in s['IPSet']['IPSetDescriptors']]
+
+                        to_insert = [x for x in kwargs['addresses'].split() if x not in ips]
+
+                        updates = [{'Action': 'INSERT', 'IPSetDescriptor': {'Type': 'IPV4', 'Value': x}} for x in to_insert]
+
+                        token = waf.get_change_token()['ChangeToken']
+
+                        try:
+                            u = waf.update_ip_set(IPSetId=set_id, ChangeToken=token, Updates=updates)
+
+                            self.post_message(channel, text='@{} Os seguintes IPs não estavam listados e foram bloqueados:\n{}'.format(handle, '\n'.join(to_insert)))
+                        except Exception as e:
+                            self.post_message(channel, text='@{} Erro: {}'.format(handle, str(e)))
+
+                elif command == 'waf unblock':
+                    if not self.authorized(handle, 'WAF'):
+                        self.set_job_status('Unauthorized')
+                        self.post_message(channel=channel, text='@{} Unauthorized'.format(handle))
+                        return False
+                    else:
+                        session = boto3.Session(region_name=region, profile_name=account)
+
+                        waf = session.client('waf-regional')
+
+                        sets = waf.list_ip_sets()
+
+                        set_id = None
+
+                        for s in sets['IPSets']:
+                            if s['Name'] == 'DoS Originators':
+                                set_id = s['IPSetId']
+                                break
+                        else:
+                            self.post_message(channel, text='@{} IP Set "DoS Originators" não encontrado'.format(handle))
+                            return
+
+
+                        s = waf.get_ip_set(IPSetId=set_id)
+
+                        ips = [x['Value'] for x in s['IPSet']['IPSetDescriptors']]
+
+                        to_remove = [x for x in kwargs['addresses'].split() if x in ips]
+
+                        updates = [{'Action': 'DELETE', 'IPSetDescriptor': {'Type': 'IPV4', 'Value': x}} for x in to_remove]
+
+                        token = waf.get_change_token()['ChangeToken']
+
+
+                        try:
+                            u = waf.update_ip_set(IPSetId=set_id, ChangeToken=token, Updates=updates)
+                            self.post_message(channel, text='@{} Os seguintes IPs estavam listados e foram desbloqueados:\n{}'.format(handle, '\n'.join(to_remove)))
+                        except Exception as e:
+                            self.post_message(channel, text='@{} Erro: {}'.format(handle, str(e)))
+
+                elif command == 'waf list':
+                    session = boto3.Session(region_name=region, profile_name=account)
+
+                    waf = session.client('waf-regional')
+
+                    sets = waf.list_ip_sets()
+
+                    set_id = None
+
+                    for s in sets['IPSets']:
+                        if s['Name'] == 'DoS Originators':
+                            set_id = s['IPSetId']
+                            break
+                    else:
+                        self.post_message(channel, text='@{} IP Set "DoS Originators" não encontrado'.format(handle))
+                        return
+
+
+                    s = waf.get_ip_set(IPSetId=set_id)
+
+                    ips = [x['Value'] for x in s['IPSet']['IPSetDescriptors']]
+
+                    self.post_message(channel, text='@{} Os seguintes IPs estão bloqueados:\n{}'.format(handle, '\n'.join(ips)))
+
 
                 elif command == 'whoisip':
                     instances, instances_reverse = self.list_instances(session)
