@@ -306,6 +306,7 @@ func TinyLetterMonitorChanges() {
 					"prefix": "TinyLetterMonitorChanges",
 					"caller": caller,
 					"file":   file,
+					"account": account,
 					"error":  "Unauthorized",
 				}).Error("An Error Occurred")
 				continue
