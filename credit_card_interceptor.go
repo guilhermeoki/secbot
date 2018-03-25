@@ -7,11 +7,11 @@ import (
 	"regexp"
 )
 
-func CreditCardHandlerStart() {
+func CreditCardInterceptorStart() {
 
 	logger.WithFields(logrus.Fields{
 		"handler": "credit_card",
-	}).Info("Starting Handler")
+	}).Info("Starting Interceptor")
 
 	AddInterceptor(Interceptor{Regex: regexp.MustCompile(
 		"4[0-9]{12}(?:[0-9]{3})?"), Handler: CreditCardFoundInterceptor})
@@ -30,6 +30,13 @@ func CreditCardHandlerStart() {
 
 func CreditCardFoundInterceptor(md map[string]string, ev *slack.MessageEvent) {
 	DeleteMessage(ev)
+
+	logger.WithFields(logrus.Fields{
+		"prefix":   "main",
+		"channel":  ev.Channel,
+		"user":     ev.User,
+		"username": ev.Username,
+	}).Info("Card Detected")
 
 	PostEphemeralMessage(ev.Channel, ev.User, "O PCI determina que dados sensíveis de cartão (PAN e CVV) "+
 		"não devem ser compartilhados em mídias como "+

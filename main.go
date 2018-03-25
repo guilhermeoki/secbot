@@ -53,11 +53,15 @@ func GetAPI() *slack.Client {
 	return api
 }
 
+func StartInterceptors() {
+	CreditCardInterceptorStart()
+	LoggingInterceptorStart()
+}
+
 func StartHandlers() {
 	TheEndHandlerStart()
 	SlackHandlerStart()
 	AuthHandlerStart()
-	CreditCardHandlerStart()
 	AWSHandlerStart()
 	WAFHandlerStart()
 	StoneGIMHandlerStart()
@@ -147,6 +151,7 @@ func main() {
 
 	defer db.Close()
 
+	StartInterceptors()
 	StartHandlers()
 
 	//logger := log.New(os.Stdout, "slack-bot: ", log.Lshortfile|log.LstdFlags)
@@ -237,13 +242,6 @@ func main() {
 							user, _ := GetUser(ev.User)
 
 							ev.Username = user.Name
-
-							logger.WithFields(logrus.Fields{
-								"prefix":   "main",
-								"channel":  ev.Channel,
-								"user":     ev.User,
-								"username": ev.Username,
-							}).Info("Card Detected")
 
 							go c.Handler(md, ev)
 						}

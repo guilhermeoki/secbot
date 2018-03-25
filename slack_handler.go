@@ -147,6 +147,6 @@ func SlackGetMembers() {
 			PostMessage(logs_channel, fmt.Sprintf("[SLACK] Usuários removidos como MEMBER: %s", removed_memberList))
 		}
 
-		time.Sleep(30 * time.Second)
+		time.Sleep(60 * time.Second)
 	}
 }
