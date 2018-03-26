@@ -68,11 +68,17 @@ func GenerateHandlerHelp(md map[string]string, ev *slack.MessageEvent) {
 
 		keys := reflect.ValueOf(c.Parameters).MapKeys()
 
+		if len(c.RequiredPermission) > 0 {
+			f := slack.AttachmentField{Title: "Required Permission", Value: c.RequiredPermission, Short: false}
+
+			fields = append(fields, f)
+		}
+
 		for _, v := range keys {
 			f := slack.AttachmentField{
 				Title: fmt.Sprintf("%s format", v.String()),
 				Value: fmt.Sprintf("`%s`", c.Parameters[v.String()]),
-				Short: false,
+				Short: true,
 			}
 
 			fields = append(fields, f)
