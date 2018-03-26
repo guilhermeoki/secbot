@@ -1,11 +1,11 @@
 package main
 
 import (
-	"github.com/nlopes/slack"
-	"regexp"
 	"fmt"
+	"github.com/nlopes/slack"
 	"github.com/sirupsen/logrus"
 	"reflect"
+	"regexp"
 )
 
 type Command struct {

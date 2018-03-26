@@ -1,18 +1,18 @@
 package main
 
 import (
+	"context"
+	"encoding/json"
+	"errors"
+	"fmt"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/nlopes/slack"
 	"github.com/sirupsen/logrus"
-	"regexp"
 	"gopkg.in/olivere/elastic.v6"
-	"fmt"
-	"context"
-	"errors"
+	"regexp"
 	"strconv"
-	"time"
 	"strings"
-	"encoding/json"
+	"time"
 )
 
 var logging_endpoint = ""
@@ -331,11 +331,11 @@ func LoggingGetLogCommand(md map[string]string, ev *slack.MessageEvent) {
 	}
 
 	searchResult, err := logging_client.Search().
-		Index(logging_index). // search in index "tweets"
-		Query(query). // specify the query
+		Index(logging_index).    // search in index "tweets"
+		Query(query).            // specify the query
 		Sort("timestamp", true). // sort by "user" field, ascending
-		From(0).Size(10). // take documents 0-9
-		Pretty(true). // pretty print request and response JSON
+		From(0).Size(10).        // take documents 0-9
+		Pretty(true).            // pretty print request and response JSON
 		Do(context.Background()) // execute
 	if err != nil {
 		// Handle error
