@@ -29,16 +29,18 @@ func CreditCardInterceptorStart() {
 }
 
 func CreditCardFoundInterceptor(md map[string]string, ev *slack.MessageEvent) {
-	DeleteMessage(ev)
+	if ev.User != botid {
+		DeleteMessage(ev)
 
-	logger.WithFields(logrus.Fields{
-		"prefix":   "main",
-		"channel":  ev.Channel,
-		"user":     ev.User,
-		"username": ev.Username,
-	}).Info("Card Detected")
+		logger.WithFields(logrus.Fields{
+			"prefix":   "main",
+			"channel":  ev.Channel,
+			"user":     ev.User,
+			"username": ev.Username,
+		}).Info("Card Detected")
 
-	PostEphemeralMessage(ev.Channel, ev.User, "O PCI determina que dados sensíveis de cartão (PAN e CVV) "+
-		"não devem ser compartilhados em mídias como "+
-		"email, SMS, Slack, Telegram, Whatsapp e outros IMs. Por favor, respeite essa regra.")
+		PostEphemeralMessage(ev.Channel, ev.User, "O PCI determina que dados sensíveis de cartão (PAN e CVV) "+
+			"não devem ser compartilhados em mídias como "+
+			"email, SMS, Slack, Telegram, Whatsapp e outros IMs. Por favor, respeite essa regra.")
+	}
 }

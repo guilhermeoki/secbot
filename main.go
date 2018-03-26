@@ -185,6 +185,35 @@ func main() {
 			}).Info("File Shared")
 
 		case *slack.MessageEvent:
+			for _, c := range interceptors {
+				n1 := c.Regex.SubexpNames()
+				ntext := strings.Join(strings.Split(ev.Text, " "), "")
+				r1 := c.Regex.FindAllStringSubmatch(ntext, -1)
+
+				if len(r1) > 0 {
+					r2 := r1[0]
+
+					md := map[string]string{}
+					for i, n := range r2 {
+						md[n1[i]] = n
+					}
+
+					if len(r2) > 0 {
+
+						if len(ev.User) > 0 {
+							user, _ := GetUser(ev.User)
+
+							if user != nil {
+								ev.Username = user.Name
+							}
+
+							go c.Handler(md, ev)
+						}
+
+					}
+				}
+			}
+
 			if ev.User != botid {
 
 				if ev.File != nil && strings.HasPrefix(ev.Channel, "D") {
@@ -219,36 +248,6 @@ func main() {
 							msg += fmt.Sprintf("\n*Latency:* %s", latency)
 
 							PostMessage(ev.Channel, msg)
-
-						}
-					}
-				}
-
-				for _, c := range interceptors {
-					n1 := c.Regex.SubexpNames()
-					ntext := strings.Join(strings.Split(ev.Text, " "), "")
-					r1 := c.Regex.FindAllStringSubmatch(ntext, -1)
-
-					if len(r1) > 0 {
-						r2 := r1[0]
-
-						md := map[string]string{}
-						for i, n := range r2 {
-							md[n1[i]] = n
-						}
-
-						if len(r2) > 0 {
-
-							if len(ev.User) > 0 {
-								user, _ := GetUser(ev.User)
-
-								if user != nil {
-									ev.Username = user.Name
-								}
-
-								go c.Handler(md, ev)
-							}
-
 
 						}
 					}
