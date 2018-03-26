@@ -31,6 +31,9 @@ func S3UploadHandlerStart() {
 		}})
 }
 
+/*
+Uploads a Slack shared file to S3 and returns the link
+*/
 func S3Upload(ev *slack.MessageEvent) {
 	account, _ := GetHandlerConfig("s3", "default_account")
 	region, _ := GetHandlerConfig("s3", "default_region")
@@ -84,6 +87,25 @@ func S3Upload(ev *slack.MessageEvent) {
 
 }
 
+/*
+Sets S3 default account and bucket for upload.
+
+HandlerName
+
+ s3
+
+RequiredPermision
+
+ s3
+
+Regex
+
+ s3 (?P<command>set account) (?P<account>\\S+) (?P<region>\\S+) (?P<bucket>\\S+)
+
+Usage
+
+ s3 set account <account> <region> <bucket>
+*/
 func S3SetDefaultAccountCommand(md map[string]string, ev *slack.MessageEvent) {
 	if !AWSHasProfile(md["account"]) {
 		PostMessage(ev.Channel, fmt.Sprintf("@%s Conta `%s` inválida, os valores possíveis são:\n%s",

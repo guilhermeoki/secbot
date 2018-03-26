@@ -154,6 +154,29 @@ func GitHubHasOrganization(organization string) bool {
 	return false
 }
 
+/*
+Invites an user to the organization.
+
+HandlerName
+
+ github
+
+RequiredPermission
+
+ github
+
+Regex
+
+ github (?P<command>invite user) (?P<users>.*)
+
+ github (?P<organization>\\S+) (?P<command>invite user) (?P<users>.*)
+
+Usage
+
+ github invite user <users>
+
+ github <organization> invite user <users>
+*/
 func GitHubInviteUserCommand(md map[string]string, ev *slack.MessageEvent) {
 
 	avalid, organization := GitHubValidateOrganization(md)
@@ -227,6 +250,22 @@ func GitHubInviteUserCommand(md map[string]string, ev *slack.MessageEvent) {
 
 }
 
+/*
+Sets the default GitHub organization.
+
+HandlerName
+ github
+
+RequiredPermission
+
+ github
+
+Regex
+ github (?P<command>set default organization) (?P<organization>\\S+)
+
+Usage
+ github set default organization <organization>
+*/
 func GitHubSetDefaultOrganizationCommand(md map[string]string, ev *slack.MessageEvent) {
 
 	creds, _ := GitHubListOrganizations()
@@ -258,6 +297,25 @@ func GitHubValidateOrganization(md map[string]string) (bool, string) {
 	return true, organization
 }
 
+/*
+Lists the organization members.
+
+HandlerName
+
+ github
+
+Regex
+
+ github (?P<command>list members)
+
+ github (?P<organization>\\S+) (?P<command>list members)
+
+Usage
+
+ github list members
+
+ github <organizations> list members
+*/
 func GitHubListMembersCommand(md map[string]string, ev *slack.MessageEvent) {
 
 	avalid, organization := GitHubValidateOrganization(md)
@@ -281,6 +339,25 @@ func GitHubListMembersCommand(md map[string]string, ev *slack.MessageEvent) {
 	PostMessage(ev.Channel, fmt.Sprintf("@%s Membros: %s", ev.Username, strings.Join(local_member, " ")))
 }
 
+/*
+Lists the organization owners.
+
+HandlerName
+
+ github
+
+Regex
+
+ github (?P<command>list owners)
+
+ github (?P<organization>\\S+) (?P<command>list owners)
+
+Usage
+
+ github list owners
+
+ github <organization> list owners
+*/
 func GitHubListOwnersCommand(md map[string]string, ev *slack.MessageEvent) {
 
 	avalid, organization := GitHubValidateOrganization(md)
@@ -304,6 +381,25 @@ func GitHubListOwnersCommand(md map[string]string, ev *slack.MessageEvent) {
 	PostMessage(ev.Channel, fmt.Sprintf("@%s Owners: %s", ev.Username, strings.Join(local_owner, " ")))
 }
 
+/*
+Lists organization members without MFA enabled.
+
+HanderName
+
+ github
+
+Regex
+
+ github (?P<command>list nomfa)
+
+ github (?P<organization>\\S+) (?P<command>list nomfa)
+
+Usage
+
+ github list nomfa
+
+ github <organization> list nomfa
+*/
 func GitHubListNoMFACommand(md map[string]string, ev *slack.MessageEvent) {
 
 	avalid, organization := GitHubValidateOrganization(md)
@@ -327,6 +423,21 @@ func GitHubListNoMFACommand(md map[string]string, ev *slack.MessageEvent) {
 	PostMessage(ev.Channel, fmt.Sprintf("@%s Usuários sem MFA: %s", ev.Username, strings.Join(local_nomfa, " ")))
 }
 
+/*
+Lists stored organizations.
+
+HandlerName
+
+ github
+
+Regex
+
+ github (?P<command>list organizations)
+
+Usage
+
+ github list organizations
+*/
 func GitHubListOrganizationsCommand(md map[string]string, ev *slack.MessageEvent) {
 	ncreds := GitHubGetOrganizationsWithDefault()
 
@@ -416,6 +527,29 @@ func GitHubGetDefaultOrganization() string {
 
 }
 
+/*
+Creates a new GitHub account.
+
+HandlerName
+
+ github
+
+RequiredPermission
+
+ github
+
+Regex
+
+ github (?P<command>set organization) (?P<organization>\\S+) (?P<token>\\S+)
+
+ github (?P<command>set organization) (?P<organization>\\S+) (?P<login>\\S+) (?P<password>\\S+)
+
+Usage
+
+ github set organization <organization> <token>
+
+ github set organization <organization> <login> <password>
+*/
 func GitHubSetOrganizationCommand(md map[string]string, ev *slack.MessageEvent) {
 
 	DeleteMessage(ev)
@@ -444,6 +578,9 @@ func GitHubSetOrganizationCommand(md map[string]string, ev *slack.MessageEvent) 
 
 }
 
+/*
+Constantly queries the GitHub API for each stored account to be able to track it's users.
+*/
 func GitHubGetMembers() {
 
 	for {

@@ -14,7 +14,6 @@ import (
 	"os"
 	"runtime"
 	"strings"
-	"sync"
 	"syscall"
 	"time"
 )
@@ -110,7 +109,7 @@ func GetCaller() (string, string) {
 	return fun.Name(), fl
 }
 
-func main() {
+func Run() {
 	logger.WithFields(logrus.Fields{
 		"prefix": "main",
 	}).Info("SecBot is starting ...")

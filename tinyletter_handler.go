@@ -104,6 +104,29 @@ func TinyLetterGetDefaultAccount() string {
 
 }
 
+/*
+Creates a TinyLetter account.
+
+HandlerName
+
+ tinyletter
+
+RequiredPermission
+
+ tinyletter
+
+Regex
+
+ tinyletter (?P<command>set account) (?P<account>\\S+) (?P<login>\\S+) (?P<password>\\S+)
+
+ tinyletter (?P<command>set account) (?P<account>\\S+) (?P<login>\\S+) (?P<password>\\S+) (?P<domains>.*)
+
+Usage
+
+ tinyletter set account <account> <login> <password>
+
+ tinyletter set account <account> <login> <password> <domains>
+*/
 func TinyLetterSetAccountCommand(md map[string]string, ev *slack.MessageEvent) {
 
 	DeleteMessage(ev)
@@ -143,6 +166,25 @@ func TinyLetterSetAccountCommand(md map[string]string, ev *slack.MessageEvent) {
 
 }
 
+/*
+Sets TinyLetter default account.
+
+HandlerName
+
+ tinyletter
+
+RequiredPermission
+
+ tinyletter
+
+Regex
+
+ tinyletter (?P<command>set default account) (?P<account>\\S+)
+
+Usage
+
+ tinyletter set default account <account>
+*/
 func TinyLetterSetDefaultAccountCommand(md map[string]string, ev *slack.MessageEvent) {
 
 	creds, _ := TinyLetterListAccounts()
@@ -198,6 +240,25 @@ func TinyLetterGetCredentials(account string) (ExternalCredential, error) {
 	return cred, err
 }
 
+/*
+Lists account subscribers.
+
+HandlerName
+
+ tinyletter
+
+Regex
+
+ tinyletter (?P<command>list subscribers)
+
+ tinyletter (?P<command>list subscribers) (?P<account>\\S+)
+
+Usage
+
+ tinyletter list subscribers
+
+ tinyletter list subscribers <account>
+*/
 func TinyLetterListSubscribersCommand(md map[string]string, ev *slack.MessageEvent) {
 
 	avalid, account := TinyLetterValidateAccount(md)
@@ -222,6 +283,21 @@ func TinyLetterListSubscribersCommand(md map[string]string, ev *slack.MessageEve
 		ev.Username, account, strings.Join(local_subscribers, "\n")))
 }
 
+/*
+Lists stored accounts.
+
+HandlerName
+
+ tinyletter
+
+Regex
+
+ tinyletter (?P<command>list accounts)
+
+Usage
+
+ tinyletter list accounts
+*/
 func TinyLetterListAccountsCommand(md map[string]string, ev *slack.MessageEvent) {
 	ncreds := TinyLetterGetAccountsWithDefault()
 
@@ -268,6 +344,25 @@ func TinyLetterIsDomainAllowed(account string, domain string) bool {
 	}
 }
 
+/*
+Sets allowed domains for the specified account.
+
+HandlerName
+
+ tinyletter
+
+RequiredPermission
+
+ tinyletter
+
+Regex
+
+ tinyletter (?P<command>set allowed domains) (?P<account>\\S+) (?P<domains>.*)
+
+Usage
+
+ tinyletter set allowed domains <account> <domains>
+*/
 func TinyLetterSetAllowedDomainsCommand(md map[string]string, ev *slack.MessageEvent) {
 
 	creds, _ := TinyLetterListAccounts()

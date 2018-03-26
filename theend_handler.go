@@ -45,6 +45,31 @@ func TheEndHandlerStart() {
 		HandlerName:        "theend"})
 }
 
+/*
+Kills the bot.
+
+It won't come back again unless a monitoring service starts it.
+
+HandlerName
+
+ theend
+
+RequiredPermission
+
+ killer
+
+Regex
+
+ die
+
+ reborn
+
+Usage
+
+ die
+
+ reborn
+*/
 func TheEndDieCommand(md map[string]string, ev *slack.MessageEvent) {
 
 	rand.Seed(time.Now().Unix())

@@ -21,7 +21,7 @@ var logging_index = "slack"
 
 var logging_ctx = context.Background()
 
-// Tweet is a structure used for serializing/deserializing data in Elasticsearch.
+// LoggingSlackMessage is a structure used for serializing/deserializing log data in Elasticsearch.
 type LoggingSlackMessage struct {
 	Channel         string    `json:"channel"`
 	ChannelId       string    `json:"channelId"`
@@ -90,17 +90,41 @@ func LoggingInterceptorStart() {
 			".*"),
 		Handler:  LoggingInterceptor,
 		Continue: true})
+
 	AddCommand(Command{
-		Regex:   regexp.MustCompile("logging (?P<command>set endpoint) (?P<endpoint>\\S+)"),
-		Help:    "Define o endpoint de logs",
+		Regex:              regexp.MustCompile("logging (?P<command>set endpoint) (?P<endpoint>\\S+)"),
+		Help:               "Define o endpoint de logs",
+		RequiredPermission: "logging",
+		HandlerName:        "logging",
+		Usage:              "logging set endpoint <endpoint>",
+		Parameters: map[string]string{
+			"endpoint": "https://elasticsearch.endpoint:9200",
+		},
 		Handler: LoggingSetEndpointCommand})
+
 	AddCommand(Command{
-		Regex:   regexp.MustCompile("logging (?P<command>get logs) (?P<channel>\\S+) (?P<start_date>\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}) (?P<end_date>\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2})"),
-		Help:    "Obtém logs do intervalo especificado",
+		Regex:       regexp.MustCompile("logging (?P<command>get logs) (?P<channel>\\S+) (?P<start_date>\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}) (?P<end_date>\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2})"),
+		Help:        "Obtém logs do intervalo especificado",
+		HandlerName: "logging",
+		Usage:       "logging get logs <channel> <start_date> <end_date>",
+		Parameters: map[string]string{
+			"channel":    "\\S+",
+			"start_date": "\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2})",
+			"end_date":   "\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2})",
+		},
 		Handler: LoggingGetLogCommand})
+
 	AddCommand(Command{
-		Regex:   regexp.MustCompile("logging (?P<command>get logs) (?P<channel>\\S+) (?P<match>.*) (?P<start_date>\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}) (?P<end_date>\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2})"),
-		Help:    "Obtém logs do intervalo especificado que contenham o texto <match>",
+		Regex:       regexp.MustCompile("logging (?P<command>get logs) (?P<channel>\\S+) (?P<match>.*) (?P<start_date>\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}) (?P<end_date>\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2})"),
+		Help:        "Obtém logs do intervalo especificado que contenham o texto <match>",
+		HandlerName: "logging",
+		Usage:       "logging get logs <channel> <match> <start_date> <end_date>",
+		Parameters: map[string]string{
+			"channel":    "\\S+",
+			"match":      ".*",
+			"start_date": "\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2})",
+			"end_date":   "\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2})",
+		},
 		Handler: LoggingGetLogCommand})
 
 	var err error
@@ -122,6 +146,9 @@ func LoggingInterceptorStart() {
 
 }
 
+/*
+Checks if the logging_index index is present. If not, creates it..
+*/
 func LoggingCreateIndex(index string, mapping string) (bool, error) {
 
 	exists, err := logging_client.IndexExists(index).Do(context.Background())
@@ -160,6 +187,9 @@ func LoggingCreateIndex(index string, mapping string) (bool, error) {
 
 }
 
+/*
+Intercepts all log messages and stores then in Elasticsearch node logging_endpoint.
+*/
 func LoggingInterceptor(md map[string]string, ev *slack.MessageEvent) {
 
 	// Check global variable to reduce database access
@@ -236,11 +266,35 @@ func LoggingInterceptor(md map[string]string, ev *slack.MessageEvent) {
 
 }
 
+/*
+Gets an ElasticSearch client, automatically performing health checks.
+
+This should be a global variable.
+*/
 func LoggingGetClient(endpoint string) (*elastic.Client, error) {
 	scheme := strings.Split(endpoint, ":")[0]
 	return elastic.NewClient(elastic.SetURL(endpoint), elastic.SetScheme(scheme), elastic.SetSniff(false))
 }
 
+/*
+Sets the logging endpoint.
+
+HandlerName
+
+ logging
+
+RequiredPermission
+
+ logging
+
+Regex
+
+ logging (?P<command>set endpoint) (?P<endpoint>\\S+)
+
+Usage
+
+ logging set endpoint <endpoint>
+*/
 func LoggingSetEndpointCommand(md map[string]string, ev *slack.MessageEvent) {
 
 	end := StripURL(md["endpoint"])
@@ -263,6 +317,25 @@ func LoggingSetEndpointCommand(md map[string]string, ev *slack.MessageEvent) {
 
 }
 
+/*
+Gets logs in the specified interval.
+
+HandlerName
+
+ logging
+
+Regex
+
+ logging (?P<command>get logs) (?P<channel>\\S+) (?P<start_date>\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}) (?P<end_date>\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2})
+
+ logging (?P<command>get logs) (?P<channel>\\S+) (?P<match>.*) (?P<start_date>\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}) (?P<end_date>\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2})
+
+Usage
+
+ logging get logs <channel> <start_date> <end_date>
+
+ logging get logs <channel> <match> <start_date> <end_date>
+*/
 func LoggingGetLogCommand(md map[string]string, ev *slack.MessageEvent) {
 
 	if len(logging_endpoint) == 0 || logging_client == nil {

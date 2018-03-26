@@ -87,6 +87,25 @@ func GIMHasApplication(application string) bool {
 	return false
 }
 
+/*
+Sets the GIM default application.
+
+HandlerName
+
+ gim
+
+RequiredPermission
+
+ gim
+
+Regex
+
+ gim (?P<command>set default application) (?P<application>\\S+)
+
+Usage
+
+ gim set default application <application>
+*/
 func GIMSetDefaultApplicationCommand(md map[string]string, ev *slack.MessageEvent) {
 	creds, _ := GIMListApplications()
 
@@ -117,6 +136,29 @@ func GIMValidateApplication(md map[string]string) (bool, string) {
 	return true, application
 }
 
+/*
+Recovers an user password for the application.
+
+HandlerName
+
+ gim
+
+RequiredPermission
+
+ gim
+
+Regex
+
+ gim (?P<application>\\S+) (?P<command>recover) (?P<users>.*)
+
+ gim (?P<command>recover) (?P<users>.*)
+
+Usage
+
+ gim <application> recover <users>
+
+ gim recover <users>
+*/
 func GIMRecoverCommand(md map[string]string, ev *slack.MessageEvent) {
 
 	avalid, application := GIMValidateApplication(md)
@@ -256,6 +298,20 @@ func GIMGetApplicationsWithDefault() []string {
 	return napplications
 }
 
+/*
+Lists stored GIM applications.
+
+HandlerName
+ gim
+
+Regex
+
+ gim (?P<command>list applications)
+
+Usage
+
+ gim list applications
+*/
 func GIMListApplicationsCommand(md map[string]string, ev *slack.MessageEvent) {
 	ncreds := GIMGetApplicationsWithDefault()
 
@@ -302,6 +358,25 @@ func GIMGetDefaultApplication() string {
 
 }
 
+/*
+Creates a GIM application.
+
+HandlerName
+
+ gim
+
+RequiredPermission
+
+ gim
+
+Regex
+
+ gim (?P<command>set application) (?P<application>\\S+) (?P<key>\\S+) (?P<api_key>\\S+)
+
+Usage
+
+ gim set application <application> <key> <api_key>
+*/
 func GIMSetApplicationCommand(md map[string]string, ev *slack.MessageEvent) {
 
 	DeleteMessage(ev)

@@ -84,6 +84,19 @@ func AuthGetSections() ([]string, error) {
 	return setions, err
 }
 
+/*
+Lists all permissions.
+
+HandlerName
+ auth
+
+Regex
+
+ (?P<command>auth list)
+
+Usage
+  auth list
+*/
 func AuthListCommand(md map[string]string, ev *slack.MessageEvent) {
 	sections, _ := AuthGetSections()
 
@@ -104,6 +117,25 @@ func AuthListCommand(md map[string]string, ev *slack.MessageEvent) {
 	PostMessage(ev.Channel, msg)
 }
 
+/*
+Adds the permissions <permissions> to the users <users>.
+
+HandlerName:
+
+ auth
+
+RequiredPermission:
+
+ authorizer
+
+Regex
+
+ (?P<command>auth add) (?P<permissions>.*) to users (?P<users>.*)
+
+Usage
+
+ auth add <permissions> to users <users>
+*/
 func AuthAddCommand(md map[string]string, ev *slack.MessageEvent) {
 
 	sections := strings.Split(md["permissions"], " ")
@@ -150,6 +182,24 @@ func AuthAddCommand(md map[string]string, ev *slack.MessageEvent) {
 	PostMessage(ev.Channel, msg)
 }
 
+/*
+Removes the permissions <permissions> from the users <users>.
+
+HandlerName
+ auth
+
+
+RequiredPermission
+ authorizer
+
+Regex
+
+ (?P<command>auth del) (?P<permissions>.*) to users (?P<users>.*)
+
+Usage
+
+ auth del <permissions> to users <users>
+*/
 func AuthDelCommand(md map[string]string, ev *slack.MessageEvent) {
 
 	sections := strings.Split(md["permissions"], " ")
@@ -297,6 +347,8 @@ func IsAuthorized(section string, user string) bool {
 
 	case err == sql.ErrNoRows:
 
+		fmt.Println("NOT FOUND ", section, user)
+
 		userExists = false
 
 	case err != nil:
@@ -310,6 +362,8 @@ func IsAuthorized(section string, user string) bool {
 		}).Error("An Error Occurred")
 
 	default:
+
+		fmt.Println("FOUND ", section, user)
 
 		userExists = true
 

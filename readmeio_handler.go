@@ -168,6 +168,25 @@ func ReadmeIOValidateAccount(md map[string]string) (bool, string) {
 	return true, account
 }
 
+/*
+Sets the default ReadmeIO account.
+
+HandlerName
+
+ readmeio
+
+RequiredPermission
+
+ readmeio
+
+Regex
+
+ readmeio (?P<command>set default account) (?P<account>\\S+)
+
+Usage
+
+ readmeio set default account <account>
+*/
 func ReadmeIOSetDefaultAccountCommand(md map[string]string, ev *slack.MessageEvent) {
 
 	creds, _ := ReadmeIOListAccounts()
@@ -183,6 +202,25 @@ func ReadmeIOSetDefaultAccountCommand(md map[string]string, ev *slack.MessageEve
 		ev.Username, md["account"]))
 }
 
+/*
+Lists the slug changes for the account.
+
+HandleName
+
+ readmeio
+
+Regex
+
+ readmeio (?P<command>list changes) (?P<slug>\\S+)
+
+ readmeio (?P<account>\\S+) (?P<command>list changes) (?P<slug>\\S+)
+
+Usage
+
+ readmeio list changes <slug>
+
+ readmeio <account> list changes <slug>
+*/
 func ReadmeIOListChangesCommand(md map[string]string, ev *slack.MessageEvent) {
 
 	avalid, account := ReadmeIOValidateAccount(md)
@@ -207,6 +245,25 @@ func ReadmeIOListChangesCommand(md map[string]string, ev *slack.MessageEvent) {
 		ev.Username, md["slug"], account, strings.Join(strings.Split(local_changes, " "), "\n")))
 }
 
+/*
+Lists the account pages.
+
+HandlerName
+
+ readmeio
+
+Regex
+
+ readmeio (?P<command>list pages)
+
+ readmeio (?P<account>\\S+) (?P<command>list pages)
+
+Usage
+
+ readmeio list pages
+
+ readmeio <account> list pages
+*/
 func ReadmeIOListPagesCommand(md map[string]string, ev *slack.MessageEvent) {
 
 	avalid, account := ReadmeIOValidateAccount(md)
@@ -230,6 +287,21 @@ func ReadmeIOListPagesCommand(md map[string]string, ev *slack.MessageEvent) {
 	PostMessage(ev.Channel, fmt.Sprintf("@%s *### Páginas na conta `%s` ###*:\n%s", ev.Username, account, strings.Join(local_pages, "\n")))
 }
 
+/*
+Lists the stored accounts.
+
+HandlerName
+
+ readmeio
+
+Regex
+
+ readmeio (?P<command>list accounts)
+
+Usage
+
+ readmeio list accounts
+*/
 func ReadmeIOListAccountsCommand(md map[string]string, ev *slack.MessageEvent) {
 	ncreds := ReadmeIOGetAccountsWithDefault()
 
@@ -293,6 +365,25 @@ func ReadmeIOGetDefaultAccount() string {
 
 }
 
+/*
+Creates a ReadmeIO account.
+
+HandlerName
+
+ readmeio
+
+RequiredPermission
+
+ readmeio
+
+Regex
+
+ readmeio (?P<command>set account) (?P<account>\\S+) (?P<login>\\S+) (?P<password>\\S+)
+
+Usage
+
+ readmeio set account <account> <login> <password>
+*/
 func ReadmeIOSetAccountCommand(md map[string]string, ev *slack.MessageEvent) {
 
 	DeleteMessage(ev)
@@ -327,6 +418,9 @@ func ReadmeIOGetCredentials(account string) (ExternalCredential, error) {
 	return cred, err
 }
 
+/*
+Constantly queries stored accounts for page changes, reporting those changes to logs_channel.
+*/
 func ReadmeIOMonitorChanges() {
 
 	for {

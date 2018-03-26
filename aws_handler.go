@@ -180,6 +180,21 @@ func AWSHasProfile(account string) bool {
 	return false
 }
 
+/*
+Gets the account list.
+
+HandlerName
+
+ aws
+
+Regex
+
+ aws (?P<command>list accounts)
+
+Usage
+
+ aws list accounts
+*/
 func AWSListAccountsCommand(md map[string]string, ev *slack.MessageEvent) {
 
 	profiles := AWSListProfiles()
@@ -194,6 +209,19 @@ func AWSListAccountsCommand(md map[string]string, ev *slack.MessageEvent) {
 
 }
 
+/*
+Gets instances containing <name> in the Name tag.
+
+HandlerName
+ aws
+
+Regex
+
+ aws (?P<account>\\S+) (?P<region>\\S+) (?P<command>whois) (?P<name>\\S+)
+
+Usage
+ aws <account> <region> whois <name>
+*/
 func AWSWhoisCommand(md map[string]string, ev *slack.MessageEvent) {
 	if !AWSHasRegion(md["region"]) {
 		PostMessage(ev.Channel, fmt.Sprintf("@%s Região `%s` inválida, os valores possíveis são:\n%s",
@@ -240,6 +268,21 @@ func AWSWhoisCommand(md map[string]string, ev *slack.MessageEvent) {
 	}
 }
 
+/*
+Gets instances with the <address> IP.
+
+HandlerName
+
+ aws
+
+Regex
+
+ aws (?P<account>\\S+) (?P<region>\\S+) (?P<command>whoisip) (?P<address>\\S+)
+
+Usage
+
+ aws <account> <region> whoisip <address>
+*/
 func AWSWhoisIPCommand(md map[string]string, ev *slack.MessageEvent) {
 	if !AWSHasRegion(md["region"]) {
 		PostMessage(ev.Channel, fmt.Sprintf("@%s Região `%s` inválida, os valores possíveis são:\n%s",
@@ -282,6 +325,21 @@ func AWSWhoisIPCommand(md map[string]string, ev *slack.MessageEvent) {
 	}
 }
 
+/*
+Gets instances containing <name> in the Name tag for all accounts.
+
+HandlerName
+
+ aws
+
+Regex
+
+ aws (?P<command>find) (?P<name>\\S+)
+
+Usage
+
+ aws find <name>
+*/
 func AWSFindCommand(md map[string]string, ev *slack.MessageEvent) {
 	PostMessage(ev.Channel, fmt.Sprintf("@%s procurando instâncias com o nome `%s`", ev.Username, md["name"]))
 
@@ -335,6 +393,21 @@ func AWSFindCommand(md map[string]string, ev *slack.MessageEvent) {
 
 }
 
+/*
+Gets instances with the <address> IP for all accounts.
+
+HandlerName
+
+ aws
+
+Regex
+
+ aws (?P<command>findip) (?P<address>\\S+)
+
+Usage
+
+ aws findip <address>
+*/
 func AWSFindIPCommand(md map[string]string, ev *slack.MessageEvent) {
 	PostMessage(ev.Channel, fmt.Sprintf("@%s procurando instâncias com o IP `%s`", ev.Username, md["address"]))
 
@@ -383,6 +456,19 @@ func AWSFindIPCommand(md map[string]string, ev *slack.MessageEvent) {
 
 }
 
+/*
+Gets the region list.
+
+HandlerName
+ aws
+
+Regex
+ aws (?P<command>list regions)
+
+Usage
+ aws list regions
+
+*/
 func AWSListRegionsCommand(md map[string]string, ev *slack.MessageEvent) {
 
 	regions := AWSGetRegions()
@@ -401,6 +487,18 @@ func AWSGetRegions() []AWSRegion {
 	return aws_regions
 }
 
+/*
+Gets the instance list.
+
+HandlerName
+ aws
+
+Regex
+ aws (?P<account>\\S+) (?P<region>\\S+) (?P<command>list instances)"
+
+Usage
+ aws <account> <region> list instances
+*/
 func AWSListInstancesCommand(md map[string]string, ev *slack.MessageEvent) {
 	instances, err := AWSListInstances(md["account"], md["region"])
 

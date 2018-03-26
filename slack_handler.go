@@ -23,6 +23,22 @@ func SlackHandlerStart() {
 	go SlackGetMembers()
 }
 
+/*
+Lists users without MFA.
+
+HandlerName
+
+ slack
+
+Regex
+
+ slack (?P<command>list nomfa)
+
+
+Usage
+
+ slack list nomfa
+*/
 func SlackListNoMFACommand(md map[string]string, ev *slack.MessageEvent) {
 	info, _ := api.GetTeamInfo()
 	local_nomfa, _ := GetTrackedUsers("slack", info.Name, "nomfa")
@@ -31,6 +47,9 @@ func SlackListNoMFACommand(md map[string]string, ev *slack.MessageEvent) {
 
 }
 
+/*
+Constantly queries Slack API for the same account as the bot's token to track it's users
+*/
 func SlackGetMembers() {
 	info, _ := api.GetTeamInfo()
 

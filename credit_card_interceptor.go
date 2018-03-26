@@ -26,6 +26,9 @@ func CreditCardInterceptorStart() {
 
 }
 
+/*
+If a credit card is found, delete the message and warn the user it's against PCI rules.
+*/
 func CreditCardFoundInterceptor(md map[string]string, ev *slack.MessageEvent) {
 	if ev.User != botid {
 		DeleteMessage(ev)

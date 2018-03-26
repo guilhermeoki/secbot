@@ -144,6 +144,25 @@ func WAFGetDefaultProfile() string {
 
 }
 
+/*
+Sets the default account.
+
+HandlerName
+
+ waf
+
+RequiredPermission
+
+ waf
+
+Regex
+
+ waf (?P<command>set default account) (?P<account>\\S+)"
+
+Usage
+
+ waf set default account <account>
+*/
 func WAFSetDefaultAccountCommand(md map[string]string, ev *slack.MessageEvent) {
 
 	if !AWSHasProfile(md["account"]) {
@@ -158,6 +177,25 @@ func WAFSetDefaultAccountCommand(md map[string]string, ev *slack.MessageEvent) {
 
 }
 
+/*
+Sets the default region.
+
+HandlerName
+
+ waf
+
+RequiredPermission
+
+ waf
+
+Regex
+
+ waf (?P<command>set default region) (?P<region>\\S+)"
+
+Usage
+
+ waf set default region <region>
+*/
 func WAFSetDefaultRegionCommand(md map[string]string, ev *slack.MessageEvent) {
 
 	if !AWSHasRegion(md["region"]) {
@@ -172,6 +210,25 @@ func WAFSetDefaultRegionCommand(md map[string]string, ev *slack.MessageEvent) {
 
 }
 
+/*
+Sets the default IPSet.
+
+HandlerName
+
+ waf
+
+RequiredPermission
+
+ waf
+
+Regex
+
+ waf (?P<command>set default ipset) (?P<ipset>\\S+)"
+
+Usage
+
+ waf set default ipset <ipset>
+*/
 func WAFSetDefaultIPSetCommand(md map[string]string, ev *slack.MessageEvent) {
 
 	SetHandlerConfig("waf", "default_ipset", md["ipset"])
@@ -212,6 +269,29 @@ func WAFValidateRegion(md map[string]string) (bool, string) {
 	return true, region
 }
 
+/*
+Unblocks the specified IPs on the account's WAF
+
+HandlerName
+
+ waf
+
+RequiredPermission
+
+ waf
+
+Regex
+
+ waf (?P<command>unblock) (?P<addresses>(?:\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}/\\d{1,2}\\s?)+)
+
+ waf (?P<account>\\S+) (?P<region>\\S+) (?P<command>unblock) (?P<addresses>(?:\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}/\\d{1,2}\\s?)+)
+
+Usage
+
+ waf unblock <addresses>
+
+ waf <account> <region> unblock <addresses>
+*/
 func WAFUnblockCommand(md map[string]string, ev *slack.MessageEvent) {
 
 	avalid, account := WAFValidateAccount(md)
@@ -288,6 +368,29 @@ func WAFUnblockCommand(md map[string]string, ev *slack.MessageEvent) {
 	PostMessage(ev.Channel, fmt.Sprintf("@%s Os seguintes IPs estavam listados e foram desbloqueados: %s", ev.Username, strings.Join(updated, " ")))
 }
 
+/*
+Blocks the specified IPs on the account's WAF
+
+HandlerName
+
+ waf
+
+RequiredPermission
+
+ waf
+
+Regex
+
+ waf (?P<command>block) (?P<addresses>(?:\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}/\\d{1,2}\\s?)+)
+
+ waf (?P<account>\\S+) (?P<region>\\S+) (?P<command>block) (?P<addresses>(?:\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}/\\d{1,2}\\s?)+)
+
+Usage
+
+ waf block <addresses>
+
+ waf <account> <region> block <addresses>
+*/
 func WAFBlockCommand(md map[string]string, ev *slack.MessageEvent) {
 
 	avalid, account := WAFValidateAccount(md)
@@ -373,6 +476,26 @@ func WAFGetToken(wafregional *wafregional.WAFRegional) (string, error) {
 
 	return *token.ChangeToken, err
 }
+
+/*
+Lists blocked IPs.
+
+HandlerName
+
+ waf
+
+Regex
+
+ waf (?P<account>\\S+) (?P<region>\\S+) (?P<command>list)
+
+ waf (?P<command>list)
+
+Usage
+
+ waf <account> <region> list
+
+ waf list
+*/
 
 func WAFListCommand(md map[string]string, ev *slack.MessageEvent) {
 
