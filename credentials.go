@@ -17,7 +17,7 @@ func CredentialsListCredentials(module string) ([]ExternalCredential, error) {
 
 	selectStmt := "SELECT name, login, password FROM externalcredentials WHERE module = ?"
 
-	rows, err := db.Query(selectStmt, module, name)
+	rows, err := db.Query(selectStmt, module)
 
 	if err != nil {
 		return nil, err

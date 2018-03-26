@@ -32,6 +32,8 @@ func SlackGetMembers() {
 
 	for {
 
+		time.Sleep(60 * time.Second)
+
 		users, err := api.GetUsers()
 
 		if err != nil {
@@ -146,7 +148,5 @@ func SlackGetMembers() {
 		if len(removed_memberList) > 0 {
 			PostMessage(logs_channel, fmt.Sprintf("[SLACK] Usuários removidos como MEMBER: %s", removed_memberList))
 		}
-
-		time.Sleep(60 * time.Second)
 	}
 }

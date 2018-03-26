@@ -20,7 +20,7 @@ var logger = logrus.New()
 
 var api = GetAPI()
 
-var name = "secbot"
+var botname = "secbot"
 
 var botid, _ = GetID()
 
@@ -239,11 +239,17 @@ func main() {
 
 						if len(r2) > 0 {
 
-							user, _ := GetUser(ev.User)
+							if len(ev.User) > 0 {
+								user, _ := GetUser(ev.User)
 
-							ev.Username = user.Name
+								if user != nil {
+									ev.Username = user.Name
+								}
 
-							go c.Handler(md, ev)
+								go c.Handler(md, ev)
+							}
+
+
 						}
 					}
 				}
@@ -264,7 +270,10 @@ func main() {
 
 							user, _ := GetUser(ev.User)
 
-							ev.Username = user.Name
+							if user != nil {
+
+								ev.Username = user.Name
+							}
 
 							logger.WithFields(logrus.Fields{
 								"prefix":   "main",

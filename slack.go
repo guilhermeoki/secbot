@@ -8,6 +8,10 @@ import (
 	"time"
 )
 
+var slack_group_map = make(map[string]*slack.Group)
+var slack_channel_map = make(map[string]*slack.Channel)
+var slack_user_map = make(map[string]*slack.User)
+
 func AtBot(message string) bool {
 	if strings.Contains(message, fmt.Sprintf("<@%s>", botid)) {
 		return true
@@ -16,18 +20,73 @@ func AtBot(message string) bool {
 	return false
 }
 
+func GetGroup(id string) (*slack.Group, error) {
+
+	if val, ok := slack_group_map[id]; ok {
+		return val, nil
+	}
+
+	group, err := api.GetGroupInfo(id)
+
+	if err != nil {
+		caller, file := GetCaller()
+		logger.WithFields(logrus.Fields{
+			"prefix": "GetGroup",
+			"caller": caller,
+			"file":   file,
+			"group":  id,
+			"error":  err.Error(),
+		}).Error("An Error Occurred")
+	}
+
+	slack_group_map[id] = group
+
+	return group, err
+}
+
+func GetChannel(id string) (*slack.Channel, error) {
+
+	if val, ok := slack_channel_map[id]; ok {
+		return val, nil
+	}
+
+	channel, err := api.GetChannelInfo(id)
+
+	if err != nil {
+		caller, file := GetCaller()
+		logger.WithFields(logrus.Fields{
+			"prefix":  "GetChannel",
+			"caller":  caller,
+			"file":    file,
+			"channel": id,
+			"error":   err.Error(),
+		}).Error("An Error Occurred")
+	}
+
+	slack_channel_map[id] = channel
+
+	return channel, err
+}
+
 func GetUser(id string) (*slack.User, error) {
+	if val, ok := slack_user_map[id]; ok {
+		return val, nil
+	}
+
 	user, err := api.GetUserInfo(id)
 
 	if err != nil {
 		caller, file := GetCaller()
 		logger.WithFields(logrus.Fields{
-			"prefix": "GetID",
+			"prefix": "GetUser",
 			"caller": caller,
 			"file":   file,
+			"user":   id,
 			"error":  err.Error(),
 		}).Error("An Error Occurred")
 	}
+
+	slack_user_map[id] = user
 
 	return user, err
 }
@@ -47,7 +106,7 @@ func GetID() (string, error) {
 	}
 
 	for _, user := range users {
-		if user.Name == name {
+		if user.Name == botname {
 			return user.ID, nil
 		}
 
@@ -116,9 +175,19 @@ func StripMailTo(text string) string {
 }
 
 func StripURL(text string) string {
-	if strings.Contains(text, ">") && strings.Contains(text, "|") {
-		return strings.Split(strings.Split(text, "|")[1], ">")[0]
-	} else {
-		return text
+	var t = text
+
+	if strings.Contains(t, "|") {
+		t = strings.Split(t, "|")[1]
 	}
+
+	if strings.Contains(t, "<") {
+		t = strings.Split(t, "<")[1]
+	}
+
+	if strings.Contains(t, ">") {
+		t = strings.Split(t, ">")[0]
+	}
+
+	return t
 }
