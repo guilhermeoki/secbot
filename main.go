@@ -260,6 +260,8 @@ func main() {
 
 							PostMessage(ev.Channel, msg)
 
+							continue
+
 						} else if strings.ToUpper(l[1]) == "HELP" {
 
 							msg := fmt.Sprintf("@%s\n*### Módulos Disponíveis ###*\n", ev.Username)
@@ -270,50 +272,54 @@ func main() {
 
 							PostMessage(ev.Channel, msg)
 
+							continue
+
 						}
 					}
 				}
 
-				for _, c := range commands {
-					n1 := c.Regex.SubexpNames()
-					r1 := c.Regex.FindAllStringSubmatch(ev.Text, -1)
+				if AtBot(ev.Text) {
+					for _, c := range commands {
+						n1 := c.Regex.SubexpNames()
+						r1 := c.Regex.FindAllStringSubmatch(ev.Text, -1)
 
-					if len(r1) > 0 {
-						r2 := r1[0]
+						if len(r1) > 0 {
+							r2 := r1[0]
 
-						md := map[string]string{}
-						for i, n := range r2 {
-							md[n1[i]] = n
-						}
-
-						if len(r2) > 0 {
-
-							user, _ := GetUser(ev.User)
-
-							if user != nil {
-
-								ev.Username = user.Name
+							md := map[string]string{}
+							for i, n := range r2 {
+								md[n1[i]] = n
 							}
 
-							logger.WithFields(logrus.Fields{
-								"prefix":   "main",
-								"channel":  ev.Channel,
-								"user":     ev.User,
-								"username": ev.Username,
-								"command":  md["command"],
-								"text":     ev.Text,
-							}).Info("Command Received")
+							if len(r2) > 0 {
 
-							if &c.RequiredPermission != nil {
-								if !IsAuthorized(c.RequiredPermission, ev.Username) {
-									Unauthorized(md, ev)
-									break
+								user, _ := GetUser(ev.User)
+
+								if user != nil {
+
+									ev.Username = user.Name
 								}
+
+								logger.WithFields(logrus.Fields{
+									"prefix":   "main",
+									"channel":  ev.Channel,
+									"user":     ev.User,
+									"username": ev.Username,
+									"command":  md["command"],
+									"text":     ev.Text,
+								}).Info("Command Received")
+
+								if &c.RequiredPermission != nil && len(c.RequiredPermission) > 0 {
+									if !IsAuthorized(c.RequiredPermission, ev.Username) {
+										Unauthorized(md, ev)
+										break
+									}
+								}
+
+								go c.Handler(md, ev)
+
+								break
 							}
-
-							go c.Handler(md, ev)
-
-							break
 						}
 					}
 				}

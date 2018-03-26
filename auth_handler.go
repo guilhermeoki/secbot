@@ -275,9 +275,11 @@ func AuthGetPermission(section string) ([]string, error) {
 	return users, err
 }
 
+// Checks if a user is authorized
 func IsAuthorized(section string, user string) bool {
 
-	if user == masteruser || section == "help" {
+	// testing
+	if user == masteruser || section == "" {
 		return true
 	}
 

@@ -37,12 +37,11 @@ var handlers []string
 
 func RegisterHandler(handler string) {
 	AddCommand(Command{
-		Regex:              regexp.MustCompile(fmt.Sprintf("(?P<handler>%s) help", handler)),
-		Help:               fmt.Sprintf("Obtém ajuda para o módulo `%s`", handler),
-		Usage:              fmt.Sprintf("%s help", handler),
-		Handler:            GenerateHandlerHelp,
-		HandlerName:        handler,
-		RequiredPermission: "help"})
+		Regex:       regexp.MustCompile(fmt.Sprintf("(?P<handler>%s) help", handler)),
+		Help:        fmt.Sprintf("Obtém ajuda para o módulo `%s`", handler),
+		Usage:       fmt.Sprintf("%s help", handler),
+		Handler:     GenerateHandlerHelp,
+		HandlerName: handler})
 
 	handlers = append(handlers, handler)
 

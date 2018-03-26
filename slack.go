@@ -13,9 +13,8 @@ var slack_channel_map = make(map[string]*slack.Channel)
 var slack_user_map = make(map[string]*slack.User)
 
 func AtBot(message string) bool {
-	if strings.Contains(message, fmt.Sprintf("<@%s>", botid)) {
+	if strings.HasPrefix(message, fmt.Sprintf("<@%s>", botid)) {
 		return true
-
 	}
 	return false
 }
