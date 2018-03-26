@@ -328,14 +328,13 @@ func AuthGetPermission(section string) ([]string, error) {
 // Checks if a user is authorized
 func IsAuthorized(section string, user string) bool {
 
-	// testing
 	if user == masteruser || section == "" {
 		return true
 	}
 
 	var user_id string
 
-	selectStmt := "SELECT id FROM auth WHERE section = ? AND user = ?"
+	selectStmt := "SELECT id FROM authorization WHERE section = ? AND user = ?"
 
 	err := db.QueryRow(selectStmt, section, user).Scan(&user_id)
 
@@ -346,8 +345,6 @@ func IsAuthorized(section string, user string) bool {
 	switch {
 
 	case err == sql.ErrNoRows:
-
-		fmt.Println("NOT FOUND ", section, user)
 
 		userExists = false
 
@@ -362,8 +359,6 @@ func IsAuthorized(section string, user string) bool {
 		}).Error("An Error Occurred")
 
 	default:
-
-		fmt.Println("FOUND ", section, user)
 
 		userExists = true
 

@@ -11,6 +11,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/x-cray/logrus-prefixed-formatter"
 	"golang.org/x/sys/unix"
+	"math/rand"
 	"os"
 	"runtime"
 	"strings"
@@ -83,6 +84,11 @@ func init() {
 		PrefixStyle:    "blue+b",
 		TimestampStyle: "white+h",
 	})
+
+	unknown_command_phrases = append(unknown_command_phrases, "¿QUE?")
+	unknown_command_phrases = append(unknown_command_phrases, "Err... oi??")
+	unknown_command_phrases = append(unknown_command_phrases, "Num intendi u qui ele falô")
+	unknown_command_phrases = append(unknown_command_phrases, "Abre a boca pra falar!")
 
 }
 
@@ -263,6 +269,7 @@ func Run() {
 				}
 
 				if AtBot(ev.Text) {
+					var matched = false
 					for _, c := range commands {
 						n1 := c.Regex.SubexpNames()
 						r1 := c.Regex.FindAllStringSubmatch(ev.Text, -1)
@@ -276,6 +283,8 @@ func Run() {
 							}
 
 							if len(r2) > 0 {
+
+								matched = true
 
 								user, _ := GetUser(ev.User)
 
@@ -305,6 +314,14 @@ func Run() {
 								break
 							}
 						}
+					}
+
+					if !matched {
+						rand.Seed(time.Now().Unix())
+
+						n := rand.Int() % len(unknown_command_phrases)
+
+						PostMessage(ev.Channel, fmt.Sprintf("@%s %s", ev.Username, unknown_command_phrases[n]))
 					}
 				}
 			}

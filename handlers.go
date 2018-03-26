@@ -8,6 +8,8 @@ import (
 	"regexp"
 )
 
+var unknown_command_phrases []string
+
 /*
 Defines a command, which should then be registered with AddCommand().
 

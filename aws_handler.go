@@ -521,7 +521,7 @@ func AWSListInstancesCommand(md map[string]string, ev *slack.MessageEvent) {
 func AWSGetSession(account string, region string) (*session.Session, error) {
 	sess, err := session.NewSession(&aws.Config{
 		Region:      aws.String(region),
-		Credentials: credentials.NewSharedCredentials("", account),
+		Credentials: credentials.NewSharedCredentials(credentials_path, account),
 	})
 
 	if err != nil {
