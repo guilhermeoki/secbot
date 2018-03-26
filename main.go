@@ -54,6 +54,7 @@ func GetAPI() *slack.Client {
 }
 
 func StartInterceptors() {
+	// Ensure CreditCardInterceptor is listed first to prevent credit card logging
 	CreditCardInterceptorStart()
 	LoggingInterceptorStart()
 }
@@ -185,33 +186,40 @@ func main() {
 			}).Info("File Shared")
 
 		case *slack.MessageEvent:
+			var proceedInterceptor = true
+
 			for _, c := range interceptors {
-				n1 := c.Regex.SubexpNames()
-				ntext := strings.Join(strings.Split(ev.Text, " "), "")
-				r1 := c.Regex.FindAllStringSubmatch(ntext, -1)
+				if proceedInterceptor {
+					n1 := c.Regex.SubexpNames()
+					ntext := strings.Join(strings.Split(ev.Text, " "), "")
+					r1 := c.Regex.FindAllStringSubmatch(ntext, -1)
 
-				if len(r1) > 0 {
-					r2 := r1[0]
+					if len(r1) > 0 {
+						r2 := r1[0]
 
-					md := map[string]string{}
-					for i, n := range r2 {
-						md[n1[i]] = n
-					}
-
-					if len(r2) > 0 {
-
-						if len(ev.User) > 0 {
-							user, _ := GetUser(ev.User)
-
-							if user != nil {
-								ev.Username = user.Name
-							}
-
-							go c.Handler(md, ev)
+						md := map[string]string{}
+						for i, n := range r2 {
+							md[n1[i]] = n
 						}
 
+						if len(r2) > 0 {
+
+							if len(ev.User) > 0 {
+								user, _ := GetUser(ev.User)
+
+								if user != nil {
+									ev.Username = user.Name
+								}
+
+								go c.Handler(md, ev)
+
+								proceedInterceptor = c.Continue
+							}
+
+						}
 					}
 				}
+
 			}
 
 			if ev.User != botid {

@@ -15,8 +15,9 @@ type Command struct {
 var commands []Command
 
 type Interceptor struct {
-	Regex   *regexp.Regexp
-	Handler func(md map[string]string, ev *slack.MessageEvent)
+	Regex    *regexp.Regexp
+	Handler  func(md map[string]string, ev *slack.MessageEvent)
+	Continue bool
 }
 
 var interceptors []Interceptor

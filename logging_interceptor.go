@@ -87,7 +87,7 @@ func LoggingInterceptorStart() {
 	}).Info("Starting Interceptor")
 
 	AddInterceptor(Interceptor{Regex: regexp.MustCompile(
-		".*"), Handler: LoggingInterceptor})
+		".*"), Handler: LoggingInterceptor, Continue: true})
 	AddCommand(Command{Regex: regexp.MustCompile("logging (?P<command>set endpoint) (?P<endpoint>\\S+)"),
 		Help: "Define o endpoint de logs", Handler: LoggingSetEndpointCommand})
 
