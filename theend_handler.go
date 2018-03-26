@@ -3,7 +3,6 @@ package main
 import (
 	"github.com/awnumar/memguard"
 	"github.com/nlopes/slack"
-	"github.com/sirupsen/logrus"
 	"math/rand"
 	"regexp"
 	"time"
@@ -28,20 +27,25 @@ var phrases = []string{
 }
 
 func TheEndHandlerStart() {
-	logger.WithFields(logrus.Fields{
-		"handler": "theend",
-	}).Info("Starting Handler")
+	RegisterHandler("theend")
 
-	AddCommand(Command{Regex: regexp.MustCompile("(?P<command>reborn)"), Help: "Die", Handler: TheEndDieCommand})
-	AddCommand(Command{Regex: regexp.MustCompile("(?P<command>die)"), Help: "Die", Handler: TheEndDieCommand})
+	AddCommand(Command{
+		Regex:              regexp.MustCompile("(?P<command>reborn)"),
+		Help:               "Die",
+		Usage:              "reborn",
+		Handler:            TheEndDieCommand,
+		RequiredPermission: "killer",
+		HandlerName:        "theend"})
+	AddCommand(Command{
+		Regex:              regexp.MustCompile("(?P<command>die)"),
+		Help:               "Die",
+		Usage:              "die",
+		Handler:            TheEndDieCommand,
+		RequiredPermission: "killer",
+		HandlerName:        "theend"})
 }
 
 func TheEndDieCommand(md map[string]string, ev *slack.MessageEvent) {
-
-	if !IsAuthorized("killer", ev.Username) {
-		Unauthorized(md, ev)
-		return
-	}
 
 	rand.Seed(time.Now().Unix())
 

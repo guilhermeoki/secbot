@@ -14,45 +14,124 @@ import (
 
 func GitHubHandlerStart() {
 
-	logger.WithFields(logrus.Fields{
-		"handler": "github",
-	}).Info("Starting Handler")
+	RegisterHandler("github")
 
-	AddCommand(Command{Regex: regexp.MustCompile("github (?P<command>list organizations)"),
-		Help: "Lista as organizações cadastradas", Handler: GitHubListOrganizationsCommand})
+	AddCommand(Command{
+		Regex:       regexp.MustCompile("github (?P<command>list organizations)"),
+		Help:        "Lista as organizações cadastradas",
+		Usage:       "github list organizations",
+		Handler:     GitHubListOrganizationsCommand,
+		HandlerName: "github"})
 
-	AddCommand(Command{Regex: regexp.MustCompile("github (?P<command>list members)"),
-		Help: "Lista os membros da organização", Handler: GitHubListMembersCommand})
+	AddCommand(Command{
+		Regex:       regexp.MustCompile("github (?P<command>list members)"),
+		Help:        "Lista os membros da organização",
+		Usage:       "github list members",
+		Handler:     GitHubListMembersCommand,
+		HandlerName: "github"})
 
-	AddCommand(Command{Regex: regexp.MustCompile("github (?P<command>list owners)"),
-		Help: "Lista os donos da organização", Handler: GitHubListOwnersCommand})
+	AddCommand(Command{
+		Regex:       regexp.MustCompile("github (?P<command>list owners)"),
+		Help:        "Lista os donos da organização",
+		Usage:       "github list owners",
+		Handler:     GitHubListOwnersCommand,
+		HandlerName: "github"})
 
-	AddCommand(Command{Regex: regexp.MustCompile("github (?P<command>list nomfa)"),
-		Help: "Lista os membros da organização sem MFA", Handler: GitHubListNoMFACommand})
+	AddCommand(Command{
+		Regex:       regexp.MustCompile("github (?P<command>list nomfa)"),
+		Help:        "Lista os membros da organização sem MFA",
+		Usage:       "github list nomfa",
+		Handler:     GitHubListNoMFACommand,
+		HandlerName: "github"})
 
-	AddCommand(Command{Regex: regexp.MustCompile("github (?P<organization>\\S+) (?P<command>list members)"),
-		Help: "Lista os membros da organização <organization>", Handler: GitHubListMembersCommand})
+	AddCommand(Command{
+		Regex:       regexp.MustCompile("github (?P<organization>\\S+) (?P<command>list members)"),
+		Help:        "Lista os membros da organização <organization>",
+		Usage:       "github <organizations> list members",
+		Handler:     GitHubListMembersCommand,
+		HandlerName: "github",
+		Parameters: map[string]string{
+			"organization": "\\S+",
+		}})
 
-	AddCommand(Command{Regex: regexp.MustCompile("github (?P<organization>\\S+) (?P<command>list owners)"),
-		Help: "Lista os donos da organização <organization>", Handler: GitHubListOwnersCommand})
+	AddCommand(Command{
+		Regex:       regexp.MustCompile("github (?P<organization>\\S+) (?P<command>list owners)"),
+		Help:        "Lista os donos da organização <organization>",
+		Usage:       "github <organization> list owners",
+		Handler:     GitHubListOwnersCommand,
+		HandlerName: "github",
+		Parameters: map[string]string{
+			"organization": "\\S+",
+		}})
 
-	AddCommand(Command{Regex: regexp.MustCompile("github (?P<organization>\\S+) (?P<command>list nomfa)"),
-		Help: "Lista os membros da organização <organization> sem MFA", Handler: GitHubListNoMFACommand})
+	AddCommand(Command{
+		Regex:       regexp.MustCompile("github (?P<organization>\\S+) (?P<command>list nomfa)"),
+		Help:        "Lista os membros da organização <organization> sem MFA",
+		Usage:       "github <organization> list nomfa",
+		Handler:     GitHubListNoMFACommand,
+		HandlerName: "github",
+		Parameters: map[string]string{
+			"organization": "\\S+",
+		}})
 
-	AddCommand(Command{Regex: regexp.MustCompile("github (?P<command>invite user) (?P<users>.*)"),
-		Help: "Convida usuários para a organização", Handler: GitHubInviteUserCommand})
+	AddCommand(Command{
+		Regex:              regexp.MustCompile("github (?P<command>invite user) (?P<users>.*)"),
+		Help:               "Convida usuários para a organização",
+		Usage:              "github invite user <users>",
+		Handler:            GitHubInviteUserCommand,
+		RequiredPermission: "github",
+		HandlerName:        "github",
+		Parameters: map[string]string{
+			"users": ".*",
+		}})
 
-	AddCommand(Command{Regex: regexp.MustCompile("github (?P<organization>\\S+) (?P<command>invite user) (?P<users>.*)"),
-		Help: "Convida usuários para a organização <organization>", Handler: GitHubInviteUserCommand})
+	AddCommand(Command{
+		Regex:              regexp.MustCompile("github (?P<organization>\\S+) (?P<command>invite user) (?P<users>.*)"),
+		Help:               "Convida usuários para a organização <organization>",
+		Usage:              "github <organization> invite user <users>",
+		Handler:            GitHubInviteUserCommand,
+		RequiredPermission: "github",
+		HandlerName:        "github",
+		Parameters: map[string]string{
+			"organization": "\\S+",
+			"users":        ".*",
+		}})
 
-	AddCommand(Command{Regex: regexp.MustCompile("github (?P<command>set default organization) (?P<organization>\\S+)"),
-		Help: "Define a organização padrão do GitHub", Handler: GitHubSetDefaultOrganizationCommand})
+	AddCommand(Command{
+		Regex:              regexp.MustCompile("github (?P<command>set default organization) (?P<organization>\\S+)"),
+		Help:               "Define a organização padrão do GitHub",
+		Usage:              "github set default organization <organization>",
+		Handler:            GitHubSetDefaultOrganizationCommand,
+		RequiredPermission: "github",
+		HandlerName:        "github",
+		Parameters: map[string]string{
+			"organization": "\\S+",
+		}})
 
-	AddCommand(Command{Regex: regexp.MustCompile("github (?P<command>set organization) (?P<organization>\\S+) (?P<token>\\S+)"),
-		Help: "Seta a organização <organization> com os dados informados", Handler: GitHubSetOrganizationCommand})
+	AddCommand(Command{
+		Regex:              regexp.MustCompile("github (?P<command>set organization) (?P<organization>\\S+) (?P<token>\\S+)"),
+		Help:               "Seta a organização <organization> com os dados informados",
+		Usage:              "github set organization <organization> <token>",
+		Handler:            GitHubSetOrganizationCommand,
+		RequiredPermission: "github",
+		HandlerName:        "github",
+		Parameters: map[string]string{
+			"organization": "\\S+",
+			"token":        "\\S+",
+		}})
 
-	AddCommand(Command{Regex: regexp.MustCompile("github (?P<command>set organization) (?P<organization>\\S+) (?P<login>\\S+) (?P<password>\\S+)"),
-		Help: "Seta a organização <organization> com os dados informados", Handler: GitHubSetOrganizationCommand})
+	AddCommand(Command{
+		Regex:              regexp.MustCompile("github (?P<command>set organization) (?P<organization>\\S+) (?P<login>\\S+) (?P<password>\\S+)"),
+		Help:               "Seta a organização <organization> com os dados informados",
+		Usage:              "github set organization <organization> <login> <password>",
+		Handler:            GitHubSetOrganizationCommand,
+		RequiredPermission: "github",
+		HandlerName:        "github",
+		Parameters: map[string]string{
+			"organization": "\\S+",
+			"login":        "\\S+",
+			"password":     "\\S+",
+		}})
 
 	go GitHubGetMembers()
 }
@@ -76,11 +155,7 @@ func GitHubHasOrganization(organization string) bool {
 }
 
 func GitHubInviteUserCommand(md map[string]string, ev *slack.MessageEvent) {
-	if !IsAuthorized("github", ev.Username) {
-		Unauthorized(md, ev)
-		return
-	}
-	
+
 	avalid, organization := GitHubValidateOrganization(md)
 
 	if !avalid {
@@ -153,10 +228,6 @@ func GitHubInviteUserCommand(md map[string]string, ev *slack.MessageEvent) {
 }
 
 func GitHubSetDefaultOrganizationCommand(md map[string]string, ev *slack.MessageEvent) {
-	if !IsAuthorized("github", ev.Username) {
-		Unauthorized(md, ev)
-		return
-	}
 
 	creds, _ := GitHubListOrganizations()
 
@@ -348,11 +419,6 @@ func GitHubGetDefaultOrganization() string {
 func GitHubSetOrganizationCommand(md map[string]string, ev *slack.MessageEvent) {
 
 	DeleteMessage(ev)
-
-	if !IsAuthorized("github", ev.Username) {
-		Unauthorized(md, ev)
-		return
-	}
 
 	var ex ExternalCredential
 

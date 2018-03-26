@@ -11,16 +11,24 @@ import (
 	"math/rand"
 	"regexp"
 	"strings"
-	"unicode"
 )
 
-func isMn(r rune) bool {
-	return unicode.Is(unicode.Mn, r) // Mn: nonspacing marks
-}
-
 func S3UploadHandlerStart() {
-	AddCommand(Command{Regex: regexp.MustCompile("s3 (?P<command>set account) (?P<account>\\S+) (?P<region>\\S+) (?P<bucket>\\S+)"),
-		Help: "Define a conta e o bucket do S3", Handler: S3SetDefaultAccountCommand})
+
+	RegisterHandler("s3")
+
+	AddCommand(Command{
+		Regex:              regexp.MustCompile("s3 (?P<command>set account) (?P<account>\\S+) (?P<region>\\S+) (?P<bucket>\\S+)"),
+		Help:               "Define a conta e o bucket do S3",
+		Usage:              "s3 set account <account> <region> <bucket>",
+		Handler:            S3SetDefaultAccountCommand,
+		HandlerName:        "s3",
+		RequiredPermission: "s3",
+		Parameters: map[string]string{
+			"account": "\\S+",
+			"region":  "\\S+",
+			"bucket":  "\\S+",
+		}})
 }
 
 func S3Upload(ev *slack.MessageEvent) {

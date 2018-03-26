@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/nlopes/slack"
-	"github.com/sirupsen/logrus"
 	"net/http"
 	"regexp"
 	"strings"
@@ -13,24 +12,61 @@ import (
 
 func StoneGIMHandlerStart() {
 
-	logger.WithFields(logrus.Fields{
-		"handler": "stone_gim",
-	}).Info("Starting Handler")
+	RegisterHandler("gim")
 
-	AddCommand(Command{Regex: regexp.MustCompile("gim (?P<command>list applications)"),
-		Help: "Lista as aplicações disponíveis", Handler: GIMListApplicationsCommand})
+	AddCommand(Command{
+		Regex:       regexp.MustCompile("gim (?P<command>list applications)"),
+		Help:        "Lista as aplicações disponíveis",
+		Usage:       "gim list applications",
+		Handler:     GIMListApplicationsCommand,
+		HandlerName: "gim"})
 
-	AddCommand(Command{Regex: regexp.MustCompile("gim (?P<application>\\S+) (?P<command>recover) (?P<users>.*)"),
-		Help: "Envia email de recuperação de senha para <users> da aplicação <application>", Handler: GIMRecoverCommand})
+	AddCommand(Command{
+		Regex:              regexp.MustCompile("gim (?P<application>\\S+) (?P<command>recover) (?P<users>.*)"),
+		Help:               "Envia email de recuperação de senha para <users> da aplicação <application>",
+		Usage:              "gim <application> recover <users>",
+		Handler:            GIMRecoverCommand,
+		RequiredPermission: "gim",
+		HandlerName:        "gim",
+		Parameters: map[string]string{
+			"application": "\\S+",
+			"users":       ".*",
+		}})
 
-	AddCommand(Command{Regex: regexp.MustCompile("gim (?P<command>recover) (?P<users>.*)"),
-		Help: "Envia email de recuperação de senha para <users> da aplicação <application>", Handler: GIMRecoverCommand})
+	AddCommand(Command{
+		Regex:              regexp.MustCompile("gim (?P<command>recover) (?P<users>.*)"),
+		Help:               "Envia email de recuperação de senha para <users> da aplicação <application>",
+		Usage:              "gim recover <users>",
+		Handler:            GIMRecoverCommand,
+		RequiredPermission: "gim",
+		HandlerName:        "gim",
+		Parameters: map[string]string{
+			"users": ".*",
+		}})
 
-	AddCommand(Command{Regex: regexp.MustCompile("gim (?P<command>set default application) (?P<application>\\S+)"),
-		Help: "Define a aplicação padrão do GIM", Handler: GIMSetDefaultApplicationCommand})
+	AddCommand(Command{
+		Regex:              regexp.MustCompile("gim (?P<command>set default application) (?P<application>\\S+)"),
+		Help:               "Define a aplicação padrão do GIM",
+		Usage:              "gim set default application <application>",
+		Handler:            GIMSetDefaultApplicationCommand,
+		RequiredPermission: "gim",
+		HandlerName:        "gim",
+		Parameters: map[string]string{
+			"application": "\\S+",
+		}})
 
-	AddCommand(Command{Regex: regexp.MustCompile("gim (?P<command>set application) (?P<application>\\S+) (?P<key>\\S+) (?P<api_key>\\S+)"),
-		Help: "Seta a aplicação <application> com os dados informados", Handler: GIMSetApplicationCommand})
+	AddCommand(Command{
+		Regex:              regexp.MustCompile("gim (?P<command>set application) (?P<application>\\S+) (?P<key>\\S+) (?P<api_key>\\S+)"),
+		Help:               "Seta a aplicação <application> com os dados informados",
+		Usage:              "gim set application <application> <key> <api_key>",
+		Handler:            GIMSetApplicationCommand,
+		RequiredPermission: "gim",
+		HandlerName:        "gim",
+		Parameters: map[string]string{
+			"application": "\\S+",
+			"key":         "\\S+",
+			"api_key":     "\\S+",
+		}})
 }
 
 func GIMHasApplication(application string) bool {
@@ -82,10 +118,6 @@ func GIMValidateApplication(md map[string]string) (bool, string) {
 }
 
 func GIMRecoverCommand(md map[string]string, ev *slack.MessageEvent) {
-	if !IsAuthorized("gim", ev.Username) {
-		Unauthorized(md, ev)
-		return
-	}
 
 	avalid, application := GIMValidateApplication(md)
 
@@ -273,11 +305,6 @@ func GIMGetDefaultApplication() string {
 func GIMSetApplicationCommand(md map[string]string, ev *slack.MessageEvent) {
 
 	DeleteMessage(ev)
-
-	if !IsAuthorized("gim", ev.Username) {
-		Unauthorized(md, ev)
-		return
-	}
 
 	var ex ExternalCredential
 

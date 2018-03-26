@@ -13,30 +13,76 @@ import (
 
 func ReadmeIOHandlerStart() {
 
-	logger.WithFields(logrus.Fields{
-		"handler": "readmeio",
-	}).Info("Starting Handler")
+	RegisterHandler("readmeio")
 
-	AddCommand(Command{Regex: regexp.MustCompile("readmeio (?P<command>list accounts)"),
-		Help: "Obtém a lista de contas cadastradas", Handler: ReadmeIOListAccountsCommand})
+	AddCommand(Command{
+		Regex:       regexp.MustCompile("readmeio (?P<command>list accounts)"),
+		Help:        "Obtém a lista de contas cadastradas",
+		Usage:       "readmeio list accounts",
+		Handler:     ReadmeIOListAccountsCommand,
+		HandlerName: "readmeio"})
 
-	AddCommand(Command{Regex: regexp.MustCompile("readmeio (?P<command>list pages)"),
-		Help: "Obtém a lista de páginas", Handler: ReadmeIOListPagesCommand})
+	AddCommand(Command{
+		Regex:       regexp.MustCompile("readmeio (?P<command>list pages)"),
+		Help:        "Obtém a lista de páginas",
+		Usage:       "readmeio list pages",
+		Handler:     ReadmeIOListPagesCommand,
+		HandlerName: "readmeio"})
 
-	AddCommand(Command{Regex: regexp.MustCompile("readmeio (?P<command>list changes) (?P<slug>\\S+)"),
-		Help: "Obtém lista de mudanças da <slug>", Handler: ReadmeIOListChangesCommand})
+	AddCommand(Command{
+		Regex:       regexp.MustCompile("readmeio (?P<command>list changes) (?P<slug>\\S+)"),
+		Help:        "Obtém lista de mudanças da <slug>",
+		Usage:       "readmeio list changes <slug>",
+		Handler:     ReadmeIOListChangesCommand,
+		HandlerName: "readmeio",
+		Parameters: map[string]string{
+			"slug": "\\S+",
+		}})
 
-	AddCommand(Command{Regex: regexp.MustCompile("readmeio (?P<account>\\S+) (?P<command>list pages)"),
-		Help: "Obtém a lista de páginas da conta <account>", Handler: ReadmeIOListPagesCommand})
+	AddCommand(Command{
+		Regex:       regexp.MustCompile("readmeio (?P<account>\\S+) (?P<command>list pages)"),
+		Help:        "Obtém a lista de páginas da conta <account>",
+		Usage:       "readmeio <account> list pages",
+		Handler:     ReadmeIOListPagesCommand,
+		HandlerName: "readmeio",
+		Parameters: map[string]string{
+			"account": "\\S+",
+		}})
 
-	AddCommand(Command{Regex: regexp.MustCompile("readmeio (?P<account>\\S+) (?P<command>list changes) (?P<slug>\\S+)"),
-		Help: "Obtém lista de mudanças da <slug> da conta <account>", Handler: ReadmeIOListChangesCommand})
+	AddCommand(Command{
+		Regex:       regexp.MustCompile("readmeio (?P<account>\\S+) (?P<command>list changes) (?P<slug>\\S+)"),
+		Help:        "Obtém lista de mudanças da <slug> da conta <account>",
+		Usage:       "readmeio <account> list changes <slug>",
+		Handler:     ReadmeIOListChangesCommand,
+		HandlerName: "readmeio",
+		Parameters: map[string]string{
+			"account": "\\S+",
+			"slug":    "\\S+",
+		}})
 
-	AddCommand(Command{Regex: regexp.MustCompile("readmeio (?P<command>set default account) (?P<account>\\S+)"),
-		Help: "Define a conta padrão do ReadmeIO", Handler: ReadmeIOSetDefaultAccountCommand})
+	AddCommand(Command{
+		Regex:              regexp.MustCompile("readmeio (?P<command>set default account) (?P<account>\\S+)"),
+		Help:               "Define a conta padrão do ReadmeIO",
+		Usage:              "readmeio set default account <account>",
+		Handler:            ReadmeIOSetDefaultAccountCommand,
+		RequiredPermission: "readmeio",
+		HandlerName:        "readmeio",
+		Parameters: map[string]string{
+			"account": "\\S+",
+		}})
 
-	AddCommand(Command{Regex: regexp.MustCompile("readmeio (?P<command>set account) (?P<account>\\S+) (?P<login>\\S+) (?P<password>\\S+)"),
-		Help: "Seta a conta <account> com os dados informados", Handler: ReadmeIOSetAccountCommand})
+	AddCommand(Command{
+		Regex:              regexp.MustCompile("readmeio (?P<command>set account) (?P<account>\\S+) (?P<login>\\S+) (?P<password>\\S+)"),
+		Help:               "Seta a conta <account> com os dados informados",
+		Usage:              "readmeio set account <account> <login> <password>",
+		Handler:            ReadmeIOSetAccountCommand,
+		RequiredPermission: "readmeio",
+		HandlerName:        "readmeio",
+		Parameters: map[string]string{
+			"account":  "\\S+",
+			"login":    "\\S+",
+			"password": "\\S+",
+		}})
 
 	go ReadmeIOMonitorChanges()
 }
@@ -123,10 +169,6 @@ func ReadmeIOValidateAccount(md map[string]string) (bool, string) {
 }
 
 func ReadmeIOSetDefaultAccountCommand(md map[string]string, ev *slack.MessageEvent) {
-	if !IsAuthorized("readmeio", ev.Username) {
-		Unauthorized(md, ev)
-		return
-	}
 
 	creds, _ := ReadmeIOListAccounts()
 
@@ -254,11 +296,6 @@ func ReadmeIOGetDefaultAccount() string {
 func ReadmeIOSetAccountCommand(md map[string]string, ev *slack.MessageEvent) {
 
 	DeleteMessage(ev)
-
-	if !IsAuthorized("readmeio", ev.Username) {
-		Unauthorized(md, ev)
-		return
-	}
 
 	var ex ExternalCredential
 

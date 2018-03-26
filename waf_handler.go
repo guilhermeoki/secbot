@@ -6,43 +6,112 @@ import (
 	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/aws/aws-sdk-go/service/wafregional"
 	"github.com/nlopes/slack"
-	"github.com/sirupsen/logrus"
 	"regexp"
 	"strings"
 )
 
 func WAFHandlerStart() {
 
-	logger.WithFields(logrus.Fields{
-		"handler": "waf",
-	}).Info("Starting Handler")
+	RegisterHandler("waf")
 
-	AddCommand(Command{Regex: regexp.MustCompile("waf (?P<account>\\S+) (?P<region>\\S+) (?P<command>list)"),
-		Help: "Lista os IPs bloqueados no WAF para a conta <account> região <region>", Handler: WAFListCommand})
+	AddCommand(Command{
+		Regex:       regexp.MustCompile("waf (?P<account>\\S+) (?P<region>\\S+) (?P<command>list)"),
+		Help:        "Lista os IPs bloqueados no WAF para a conta <account> região <region>",
+		Usage:       "waf <account> <region> list",
+		Handler:     WAFListCommand,
+		HandlerName: "waf",
+		Parameters: map[string]string{
+			"account": "\\S+",
+			"region":  "\\S+",
+		}})
 
-	AddCommand(Command{Regex: regexp.MustCompile("waf (?P<command>list)"),
-		Help: "Lista os IPs bloqueados no WAF", Handler: WAFListCommand})
+	AddCommand(Command{
+		Regex:       regexp.MustCompile("waf (?P<command>list)"),
+		Help:        "Lista os IPs bloqueados no WAF",
+		Usage:       "waf list",
+		Handler:     WAFListCommand,
+		HandlerName: "waf"})
 
-	AddCommand(Command{Regex: regexp.MustCompile("waf (?P<command>block) (?P<addresses>(?:\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}/\\d{1,2}\\s?)+)"),
-		Help: "Bloqueia IPs no WAF", Handler: WAFBlockCommand})
+	AddCommand(Command{
+		Regex:              regexp.MustCompile("waf (?P<command>block) (?P<addresses>(?:\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}/\\d{1,2}\\s?)+)"),
+		Help:               "Bloqueia IPs no WAF",
+		Usage:              "waf block <addresses>",
+		Handler:            WAFBlockCommand,
+		RequiredPermission: "waf",
+		HandlerName:        "waf",
+		Parameters: map[string]string{
+			"addresses": "(?:\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}/\\d{1,2}\\s?)+)",
+		}})
 
-	AddCommand(Command{Regex: regexp.MustCompile("waf (?P<command>unblock) (?P<addresses>(?:\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}/\\d{1,2}\\s?)+)"),
-		Help: "Desbloqueia IPs no WAF", Handler: WAFUnblockCommand})
+	AddCommand(Command{
+		Regex:              regexp.MustCompile("waf (?P<command>unblock) (?P<addresses>(?:\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}/\\d{1,2}\\s?)+)"),
+		Help:               "Desbloqueia IPs no WAF",
+		Usage:              "waf unblock <addresses>",
+		Handler:            WAFUnblockCommand,
+		RequiredPermission: "waf",
+		HandlerName:        "waf",
+		Parameters: map[string]string{
+			"addresses": "(?:\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}/\\d{1,2}\\s?)+)",
+		}})
 
-	AddCommand(Command{Regex: regexp.MustCompile("waf (?P<account>\\S+) (?P<region>\\S+) (?P<command>block) (?P<addresses>(?:\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}/\\d{1,2}\\s?)+)"),
-		Help: "Bloqueia IPs no WAF para a conta <account> região <region>", Handler: WAFBlockCommand})
+	AddCommand(Command{
+		Regex:              regexp.MustCompile("waf (?P<account>\\S+) (?P<region>\\S+) (?P<command>block) (?P<addresses>(?:\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}/\\d{1,2}\\s?)+)"),
+		Help:               "Bloqueia IPs no WAF para a conta <account> região <region>",
+		Usage:              "waf <account> <region> block <addresses>",
+		Handler:            WAFBlockCommand,
+		RequiredPermission: "waf",
+		HandlerName:        "waf",
+		Parameters: map[string]string{
+			"account":   "\\S+",
+			"region":    "\\S+",
+			"addresses": "(?:\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}/\\d{1,2}\\s?)+)",
+		}})
 
-	AddCommand(Command{Regex: regexp.MustCompile("waf (?P<account>\\S+) (?P<region>\\S+) (?P<command>unblock) (?P<addresses>(?:\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}/\\d{1,2}\\s?)+)"),
-		Help: "Desbloqueia IPs no WAF para a conta <account> região <region>", Handler: WAFUnblockCommand})
+	AddCommand(Command{
+		Regex:              regexp.MustCompile("waf (?P<account>\\S+) (?P<region>\\S+) (?P<command>unblock) (?P<addresses>(?:\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}/\\d{1,2}\\s?)+)"),
+		Help:               "Desbloqueia IPs no WAF para a conta <account> região <region>",
+		Usage:              "waf <account> <region> unblock <addresses>",
+		Handler:            WAFUnblockCommand,
+		RequiredPermission: "waf",
+		HandlerName:        "waf",
+		Parameters: map[string]string{
+			"account":   "\\S+",
+			"region":    "\\S+",
+			"addresses": "(?:\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}/\\d{1,2}\\s?)+)",
+		}})
 
-	AddCommand(Command{Regex: regexp.MustCompile("waf (?P<command>set default account) (?P<account>\\S+)"),
-		Help: "Define a conta padrão do WAF", Handler: WAFSetDefaultAccountCommand})
+	AddCommand(Command{
+		Regex:              regexp.MustCompile("waf (?P<command>set default account) (?P<account>\\S+)"),
+		Help:               "Define a conta padrão do WAF",
+		Usage:              "waf set default account <account>",
+		Handler:            WAFSetDefaultAccountCommand,
+		RequiredPermission: "waf",
+		HandlerName:        "waf",
+		Parameters: map[string]string{
+			"account": "\\S+",
+		}})
 
-	AddCommand(Command{Regex: regexp.MustCompile("waf (?P<command>set default region) (?P<region>\\S+)"),
-		Help: "Define a região padrão do WAF", Handler: WAFSetDefaultRegionCommand})
+	AddCommand(Command{
+		Regex:              regexp.MustCompile("waf (?P<command>set default region) (?P<region>\\S+)"),
+		Help:               "Define a região padrão do WAF",
+		Usage:              "waf set default region <region>",
+		Handler:            WAFSetDefaultRegionCommand,
+		RequiredPermission: "waf",
+		HandlerName:        "waf",
+		Parameters: map[string]string{
+			"region": "\\S+",
+		}})
 
-	AddCommand(Command{Regex: regexp.MustCompile("waf (?P<command>set default ipset) (?P<ipset>.*)"),
-		Help: "Define a região padrão do WAF", Handler: WAFSetDefaultIPSetCommand})
+	AddCommand(Command{
+		Regex:              regexp.MustCompile("waf (?P<command>set default ipset) (?P<ipset>.*)"),
+		Help:               "Define a região padrão do WAF",
+		Usage:              "waf set default ipset <ipset>",
+		Handler:            WAFSetDefaultIPSetCommand,
+		RequiredPermission: "waf",
+		HandlerName:        "waf",
+		Parameters: map[string]string{
+			"ipset": ".*",
+		}})
 
 }
 
@@ -76,10 +145,6 @@ func WAFGetDefaultProfile() string {
 }
 
 func WAFSetDefaultAccountCommand(md map[string]string, ev *slack.MessageEvent) {
-	if !IsAuthorized("waf", ev.Username) {
-		Unauthorized(md, ev)
-		return
-	}
 
 	if !AWSHasProfile(md["account"]) {
 		PostMessage(ev.Channel, fmt.Sprintf("@%s Conta `%s` inválida, os valores possíveis são:\n%s",
@@ -94,10 +159,6 @@ func WAFSetDefaultAccountCommand(md map[string]string, ev *slack.MessageEvent) {
 }
 
 func WAFSetDefaultRegionCommand(md map[string]string, ev *slack.MessageEvent) {
-	if !IsAuthorized("waf", ev.Username) {
-		Unauthorized(md, ev)
-		return
-	}
 
 	if !AWSHasRegion(md["region"]) {
 		PostMessage(ev.Channel, fmt.Sprintf("@%s Região `%s` inválida, os valores possíveis são:\n%s",
@@ -112,10 +173,6 @@ func WAFSetDefaultRegionCommand(md map[string]string, ev *slack.MessageEvent) {
 }
 
 func WAFSetDefaultIPSetCommand(md map[string]string, ev *slack.MessageEvent) {
-	if !IsAuthorized("waf", ev.Username) {
-		Unauthorized(md, ev)
-		return
-	}
 
 	SetHandlerConfig("waf", "default_ipset", md["ipset"])
 	PostMessage(ev.Channel, fmt.Sprintf("@%s IPSet padrão setada para `%s`",
@@ -156,11 +213,6 @@ func WAFValidateRegion(md map[string]string) (bool, string) {
 }
 
 func WAFUnblockCommand(md map[string]string, ev *slack.MessageEvent) {
-
-	if !IsAuthorized("waf", ev.Username) {
-		Unauthorized(md, ev)
-		return
-	}
 
 	avalid, account := WAFValidateAccount(md)
 
@@ -237,11 +289,6 @@ func WAFUnblockCommand(md map[string]string, ev *slack.MessageEvent) {
 }
 
 func WAFBlockCommand(md map[string]string, ev *slack.MessageEvent) {
-
-	if !IsAuthorized("waf", ev.Username) {
-		Unauthorized(md, ev)
-		return
-	}
 
 	avalid, account := WAFValidateAccount(md)
 

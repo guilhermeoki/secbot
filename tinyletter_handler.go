@@ -13,30 +13,81 @@ import (
 
 func TinyLetterHandlerStart() {
 
-	logger.WithFields(logrus.Fields{
-		"handler": "tinyletter",
-	}).Info("Starting Handler")
+	RegisterHandler("tinyletter")
 
-	AddCommand(Command{Regex: regexp.MustCompile("tinyletter (?P<command>list accounts)"),
-		Help: "Obtém a lista de contas cadastradas", Handler: TinyLetterListAccountsCommand})
+	AddCommand(Command{
+		Regex:       regexp.MustCompile("tinyletter (?P<command>list accounts)"),
+		Help:        "Obtém a lista de contas cadastradas",
+		Usage:       "tinyletter list accounts",
+		Handler:     TinyLetterListAccountsCommand,
+		HandlerName: "tinyletter"})
 
-	AddCommand(Command{Regex: regexp.MustCompile("tinyletter (?P<command>list subscribers)"),
-		Help: "Obtém lista de inscritos da conta", Handler: TinyLetterListSubscribersCommand})
+	AddCommand(Command{
+		Regex:       regexp.MustCompile("tinyletter (?P<command>list subscribers)"),
+		Help:        "Obtém lista de inscritos da conta",
+		Usage:       "tinyletter list subscribers",
+		Handler:     TinyLetterListSubscribersCommand,
+		HandlerName: "tinyletter"})
 
-	AddCommand(Command{Regex: regexp.MustCompile("tinyletter (?P<command>list subscribers) (?P<account>\\S+)"),
-		Help: "Obtém lista de inscritos da conta <account>", Handler: TinyLetterListSubscribersCommand})
+	AddCommand(Command{
+		Regex:       regexp.MustCompile("tinyletter (?P<command>list subscribers) (?P<account>\\S+)"),
+		Help:        "Obtém lista de inscritos da conta <account>",
+		Usage:       "tinyletter list subscribers <account>",
+		Handler:     TinyLetterListSubscribersCommand,
+		HandlerName: "tinyletter",
+		Parameters: map[string]string{
+			"account": "\\S+",
+		}})
 
-	AddCommand(Command{Regex: regexp.MustCompile("tinyletter (?P<command>set default account) (?P<account>\\S+)"),
-		Help: "Define a conta padrão do TinyLetter", Handler: TinyLetterSetDefaultAccountCommand})
+	AddCommand(Command{
+		Regex:              regexp.MustCompile("tinyletter (?P<command>set default account) (?P<account>\\S+)"),
+		Help:               "Define a conta padrão do TinyLetter",
+		Usage:              "tinyletter set default account <account>",
+		Handler:            TinyLetterSetDefaultAccountCommand,
+		HandlerName:        "tinyletter",
+		RequiredPermission: "tinyletter",
+		Parameters: map[string]string{
+			"account": "\\S+",
+		}})
 
-	AddCommand(Command{Regex: regexp.MustCompile("tinyletter (?P<command>set account) (?P<account>\\S+) (?P<login>\\S+) (?P<password>\\S+)"),
-		Help: "Seta a conta <account> com os dados informados", Handler: TinyLetterSetAccountCommand})
+	AddCommand(Command{
+		Regex:              regexp.MustCompile("tinyletter (?P<command>set account) (?P<account>\\S+) (?P<login>\\S+) (?P<password>\\S+)"),
+		Help:               "Seta a conta <account> com os dados informados",
+		Usage:              "tinyletter set account <account> <login> <password>",
+		Handler:            TinyLetterSetAccountCommand,
+		HandlerName:        "tinyletter",
+		RequiredPermission: "tinyletter",
+		Parameters: map[string]string{
+			"account":  "\\S+",
+			"login":    "\\S+",
+			"password": "\\S+",
+		}})
 
-	AddCommand(Command{Regex: regexp.MustCompile("tinyletter (?P<command>set account) (?P<account>\\S+) (?P<login>\\S+) (?P<password>\\S+) (?P<domains>.*)"),
-		Help: "Seta a conta <account> com os dados informados", Handler: TinyLetterSetAccountCommand})
+	AddCommand(Command{
+		Regex:              regexp.MustCompile("tinyletter (?P<command>set account) (?P<account>\\S+) (?P<login>\\S+) (?P<password>\\S+) (?P<domains>.*)"),
+		Help:               "Seta a conta <account> com os dados informados",
+		Usage:              "tinyletter set account <account> <login> <password> <domains>",
+		Handler:            TinyLetterSetAccountCommand,
+		HandlerName:        "tinyletter",
+		RequiredPermission: "tinyletter",
+		Parameters: map[string]string{
+			"account":  "\\S+",
+			"login":    "\\S+",
+			"password": "\\S+",
+			"domains":  ".*",
+		}})
 
-	AddCommand(Command{Regex: regexp.MustCompile("tinyletter (?P<command>set allowed domains) (?P<account>\\S+) (?P<domains>.*)"),
-		Help: "Seta os domínios permitidos para os inscritos da conta <account>", Handler: TinyLetterSetAllowedDomainsCommand})
+	AddCommand(Command{
+		Regex:              regexp.MustCompile("tinyletter (?P<command>set allowed domains) (?P<account>\\S+) (?P<domains>.*)"),
+		Help:               "Seta os domínios permitidos para os inscritos da conta <account>",
+		Usage:              "tinyletter set allowed domains <account> <domains>",
+		Handler:            TinyLetterSetAllowedDomainsCommand,
+		HandlerName:        "tinyletter",
+		RequiredPermission: "tinyletter",
+		Parameters: map[string]string{
+			"account": "\\S+",
+			"domains": ".*",
+		}})
 
 	go TinyLetterMonitorChanges()
 }
@@ -56,11 +107,6 @@ func TinyLetterGetDefaultAccount() string {
 func TinyLetterSetAccountCommand(md map[string]string, ev *slack.MessageEvent) {
 
 	DeleteMessage(ev)
-
-	if !IsAuthorized("tinyletter", ev.Username) {
-		Unauthorized(md, ev)
-		return
-	}
 
 	var ex ExternalCredential
 
@@ -98,11 +144,6 @@ func TinyLetterSetAccountCommand(md map[string]string, ev *slack.MessageEvent) {
 }
 
 func TinyLetterSetDefaultAccountCommand(md map[string]string, ev *slack.MessageEvent) {
-
-	if !IsAuthorized("tinyletter", ev.Username) {
-		Unauthorized(md, ev)
-		return
-	}
 
 	creds, _ := TinyLetterListAccounts()
 
@@ -228,10 +269,6 @@ func TinyLetterIsDomainAllowed(account string, domain string) bool {
 }
 
 func TinyLetterSetAllowedDomainsCommand(md map[string]string, ev *slack.MessageEvent) {
-	if !IsAuthorized("tinyletter", ev.Username) {
-		Unauthorized(md, ev)
-		return
-	}
 
 	creds, _ := TinyLetterListAccounts()
 
@@ -314,11 +351,11 @@ func TinyLetterMonitorChanges() {
 			if !rsubscribers["success"].(bool) {
 				caller, file := GetCaller()
 				logger.WithFields(logrus.Fields{
-					"prefix": "TinyLetterMonitorChanges",
-					"caller": caller,
-					"file":   file,
+					"prefix":  "TinyLetterMonitorChanges",
+					"caller":  caller,
+					"file":    file,
 					"account": account,
-					"error":  "Unauthorized",
+					"error":   "Unauthorized",
 				}).Error("An Error Occurred")
 				continue
 			}

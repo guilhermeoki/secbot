@@ -12,18 +12,38 @@ import (
 
 func AuthHandlerStart() {
 
-	logger.WithFields(logrus.Fields{
-		"handler": "auth",
-	}).Info("Starting Handler")
+	RegisterHandler("auth")
 
-	AddCommand(Command{Regex: regexp.MustCompile("(?P<command>auth add) (?P<permissions>.*) to users (?P<users>.*)"),
-		Help: "Adiciona as permissões <permissions> para os usuários <users>", Handler: AuthAddCommand})
+	AddCommand(Command{
+		Regex:              regexp.MustCompile("(?P<command>auth add) (?P<permissions>.*) to users (?P<users>.*)"),
+		Help:               "Adiciona as permissões <permissions> para os usuários <users>",
+		Handler:            AuthAddCommand,
+		RequiredPermission: "authorizer",
+		HandlerName:        "auth",
+		Usage:              "auth add <permissions> to users <users>",
+		Parameters: map[string]string{
+			"permissions": ".*",
+			"users":       ".*",
+		}})
 
-	AddCommand(Command{Regex: regexp.MustCompile("(?P<command>auth del) (?P<permissions>.*) to users (?P<users>.*)"),
-		Help: "Remove as permissões <permissions> dos usuários <users>", Handler: AuthDelCommand})
+	AddCommand(Command{
+		Regex:              regexp.MustCompile("(?P<command>auth del) (?P<permissions>.*) to users (?P<users>.*)"),
+		Help:               "Remove as permissões <permissions> dos usuários <users>",
+		Handler:            AuthDelCommand,
+		RequiredPermission: "authorizer",
+		HandlerName:        "auth",
+		Usage:              "auth del <permissions> to users <users>",
+		Parameters: map[string]string{
+			"permissions": ".*",
+			"users":       ".*",
+		}})
 
-	AddCommand(Command{Regex: regexp.MustCompile("(?P<command>auth list)"),
-		Help: "Lista todas as permissões", Handler: AuthListCommand})
+	AddCommand(Command{
+		Regex:       regexp.MustCompile("(?P<command>auth list)"),
+		Help:        "Lista todas as permissões",
+		Handler:     AuthListCommand,
+		Usage:       "auth list",
+		HandlerName: "auth"})
 
 	go SlackGetMembers()
 }
@@ -85,10 +105,6 @@ func AuthListCommand(md map[string]string, ev *slack.MessageEvent) {
 }
 
 func AuthAddCommand(md map[string]string, ev *slack.MessageEvent) {
-	if !IsAuthorized("authorizer", ev.Username) {
-		Unauthorized(md, ev)
-		return
-	}
 
 	sections := strings.Split(md["permissions"], " ")
 	users := strings.Split(md["users"], " ")
@@ -135,10 +151,6 @@ func AuthAddCommand(md map[string]string, ev *slack.MessageEvent) {
 }
 
 func AuthDelCommand(md map[string]string, ev *slack.MessageEvent) {
-	if !IsAuthorized("authorizer", ev.Username) {
-		Unauthorized(md, ev)
-		return
-	}
 
 	sections := strings.Split(md["permissions"], " ")
 	users := strings.Split(md["users"], " ")
@@ -265,7 +277,7 @@ func AuthGetPermission(section string) ([]string, error) {
 
 func IsAuthorized(section string, user string) bool {
 
-	if user == masteruser {
+	if user == masteruser || section == "help" {
 		return true
 	}
 
@@ -303,4 +315,9 @@ func IsAuthorized(section string, user string) bool {
 
 	return userExists
 
+}
+
+func Unauthorized(md map[string]string, ev *slack.MessageEvent) {
+	PostMessage(ev.Channel, fmt.Sprintf("@%s Você não está autorizado a executar o comando `%s`. "+
+		"Esse incidente foi logado.", ev.Username, md["command"]))
 }

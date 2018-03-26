@@ -39,30 +39,76 @@ type AWSInstance struct {
 
 func AWSHandlerStart() {
 
-	logger.WithFields(logrus.Fields{
-		"handler": "aws",
-	}).Info("Starting Handler")
+	RegisterHandler("aws")
 
-	AddCommand(Command{Regex: regexp.MustCompile("aws (?P<command>list accounts)"),
-		Help: "Obtém a lista de contas", Handler: AWSListAccountsCommand})
+	AddCommand(Command{
+		Regex:       regexp.MustCompile("aws (?P<command>list accounts)"),
+		Help:        "Obtém a lista de contas",
+		Handler:     AWSListAccountsCommand,
+		Usage:       "aws list accounts",
+		HandlerName: "aws"})
 
-	AddCommand(Command{Regex: regexp.MustCompile("aws (?P<command>list regions)"),
-		Help: "Obtém a lista de regiões", Handler: AWSListRegionsCommand})
+	AddCommand(Command{
+		Regex:       regexp.MustCompile("aws (?P<command>list regions)"),
+		Help:        "Obtém a lista de regiões",
+		Handler:     AWSListRegionsCommand,
+		Usage:       "aws list regions",
+		HandlerName: "aws"})
 
-	AddCommand(Command{Regex: regexp.MustCompile("aws (?P<account>\\S+) (?P<region>\\S+) (?P<command>list instances)"),
-		Help: "Obtém a lista das instâncias e suas roles", Handler: AWSListInstancesCommand})
+	AddCommand(Command{
+		Regex:       regexp.MustCompile("aws (?P<account>\\S+) (?P<region>\\S+) (?P<command>list instances)"),
+		Help:        "Obtém a lista das instâncias e suas roles",
+		Handler:     AWSListInstancesCommand,
+		HandlerName: "aws",
+		Usage:       "aws <account> <region> list instances",
+		Parameters: map[string]string{
+			"account": "\\S+",
+			"region":  "\\S+",
+		}})
 
-	AddCommand(Command{Regex: regexp.MustCompile("aws (?P<account>\\S+) (?P<region>\\S+) (?P<command>whoisip) (?P<address>\\S+)"),
-		Help: "Obtém a role da máquina <address>", Handler: AWSWhoisIPCommand})
+	AddCommand(Command{
+		Regex:       regexp.MustCompile("aws (?P<account>\\S+) (?P<region>\\S+) (?P<command>whoisip) (?P<address>\\S+)"),
+		Help:        "Obtém a role da máquina <address>",
+		Handler:     AWSWhoisIPCommand,
+		HandlerName: "aws",
+		Usage:       "aws <account> <region> whoisip <address>",
+		Parameters: map[string]string{
+			"account": "\\S+",
+			"region":  "\\S+",
+			"address": "\\S+",
+		}})
 
-	AddCommand(Command{Regex: regexp.MustCompile("aws (?P<account>\\S+) (?P<region>\\S+) (?P<command>whois) (?P<name>\\S+)"),
-		Help: "Obtém os IPs das máquinas com a role <name>", Handler: AWSWhoisCommand})
+	AddCommand(Command{
+		Regex:       regexp.MustCompile("aws (?P<account>\\S+) (?P<region>\\S+) (?P<command>whois) (?P<name>\\S+)"),
+		Help:        "Obtém os IPs das máquinas com a role <name>",
+		Handler:     AWSWhoisCommand,
+		HandlerName: "aws",
+		Usage:       "aws <account> <region> whois <name>",
+		Parameters: map[string]string{
+			"account": "\\S+",
+			"region":  "\\S+",
+			"name":    "\\S+",
+		}})
 
-	AddCommand(Command{Regex: regexp.MustCompile("aws (?P<command>findip) (?P<address>\\S+)"),
-		Help: "Obtém a role da máquina <address> em todas as regiões de todas as contas", Handler: AWSFindIPCommand})
+	AddCommand(Command{
+		Regex:       regexp.MustCompile("aws (?P<command>findip) (?P<address>\\S+)"),
+		Help:        "Obtém a role da máquina <address> em todas as regiões de todas as contas",
+		Handler:     AWSFindIPCommand,
+		HandlerName: "aws",
+		Usage:       "aws findip <address>",
+		Parameters: map[string]string{
+			"address": "\\S+",
+		}})
 
-	AddCommand(Command{Regex: regexp.MustCompile("aws (?P<command>find) (?P<name>\\S+)"),
-		Help: "Obtém os IPs das máquinas com a role <name> em todas as regiões de todas as contas", Handler: AWSFindCommand})
+	AddCommand(Command{
+		Regex:       regexp.MustCompile("aws (?P<command>find) (?P<name>\\S+)"),
+		Help:        "Obtém os IPs das máquinas com a role <name> em todas as regiões de todas as contas",
+		Handler:     AWSFindCommand,
+		HandlerName: "aws",
+		Usage:       "aws find <name>",
+		Parameters: map[string]string{
+			"name": "\\S+",
+		}})
 
 	aws_regions = append(aws_regions, AWSRegion{Name: "us-east-1", Description: "US East (N. Virginia)"})
 

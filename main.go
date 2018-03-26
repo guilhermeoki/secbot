@@ -257,6 +257,16 @@ func main() {
 
 							PostMessage(ev.Channel, msg)
 
+						} else if strings.ToUpper(l[1]) == "HELP" {
+
+							msg := fmt.Sprintf("@%s\n*### Módulos Disponíveis ###*\n", ev.Username)
+
+							for _, v := range handlers {
+								msg += fmt.Sprintf("\n%s - `%s help`", v, v)
+							}
+
+							PostMessage(ev.Channel, msg)
+
 						}
 					}
 				}
@@ -291,7 +301,16 @@ func main() {
 								"text":     ev.Text,
 							}).Info("Command Received")
 
+							if &c.RequiredPermission != nil {
+								if !IsAuthorized(c.RequiredPermission, ev.Username) {
+									Unauthorized(md, ev)
+									break
+								}
+							}
+
 							go c.Handler(md, ev)
+
+							break
 						}
 					}
 				}

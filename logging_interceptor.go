@@ -87,16 +87,23 @@ func LoggingInterceptorStart() {
 		"handler": "logging",
 	}).Info("Starting Interceptor")
 
-	AddInterceptor(Interceptor{Regex: regexp.MustCompile(
-		".*"), Handler: LoggingInterceptor, Continue: true})
-	AddCommand(Command{Regex: regexp.MustCompile("logging (?P<command>set endpoint) (?P<endpoint>\\S+)"),
-		Help: "Define o endpoint de logs", Handler: LoggingSetEndpointCommand})
-	AddCommand(Command{Regex: regexp.MustCompile(
-		"logging (?P<command>get logs) (?P<channel>\\S+) (?P<start_date>\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}) (?P<end_date>\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2})"),
-		Help: "Obtém logs do intervalo especificado", Handler: LoggingGetLogCommand})
-	AddCommand(Command{Regex: regexp.MustCompile(
-		"logging (?P<command>get logs) (?P<channel>\\S+) (?P<match>.*) (?P<start_date>\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}) (?P<end_date>\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2})"),
-		Help: "Obtém logs do intervalo especificado que contenham o texto <match>", Handler: LoggingGetLogCommand})
+	AddInterceptor(Interceptor{
+		Regex: regexp.MustCompile(
+			".*"),
+		Handler:  LoggingInterceptor,
+		Continue: true})
+	AddCommand(Command{
+		Regex:   regexp.MustCompile("logging (?P<command>set endpoint) (?P<endpoint>\\S+)"),
+		Help:    "Define o endpoint de logs",
+		Handler: LoggingSetEndpointCommand})
+	AddCommand(Command{
+		Regex:   regexp.MustCompile("logging (?P<command>get logs) (?P<channel>\\S+) (?P<start_date>\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}) (?P<end_date>\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2})"),
+		Help:    "Obtém logs do intervalo especificado",
+		Handler: LoggingGetLogCommand})
+	AddCommand(Command{
+		Regex:   regexp.MustCompile("logging (?P<command>get logs) (?P<channel>\\S+) (?P<match>.*) (?P<start_date>\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}) (?P<end_date>\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2})"),
+		Help:    "Obtém logs do intervalo especificado que contenham o texto <match>",
+		Handler: LoggingGetLogCommand})
 
 	var err error
 
@@ -357,7 +364,6 @@ func LoggingGetLogCommand(md map[string]string, ev *slack.MessageEvent) {
 
 		results = append(results, fmt.Sprintf("[%s] %s: %s", t.Timestamp, t.Username, t.Text))
 	}
-
 
 	PostMessage(ev.Channel, fmt.Sprintf("@%s %d resultados encontrados em %d milisegundos",
 		ev.Username, len(results), searchResult.TookInMillis))

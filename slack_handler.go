@@ -11,11 +11,14 @@ import (
 
 func SlackHandlerStart() {
 
-	logger.WithFields(logrus.Fields{
-		"handler": "slack",
-	}).Info("Starting Handler")
+	RegisterHandler("slack")
 
-	AddCommand(Command{Regex: regexp.MustCompile("slack (?P<command>list nomfa)"), Help: "Lista os usuários sem MFA", Handler: SlackListNoMFACommand})
+	AddCommand(Command{
+		Regex:       regexp.MustCompile("slack (?P<command>list nomfa)"),
+		Help:        "Lista os usuários sem MFA",
+		Usage:       "slack list nomfa",
+		Handler:     SlackListNoMFACommand,
+		HandlerName: "slack"})
 
 	go SlackGetMembers()
 }
