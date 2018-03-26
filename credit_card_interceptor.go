@@ -1,4 +1,4 @@
-package main
+package secbot
 
 import (
 	_ "github.com/mattn/go-sqlite3"
@@ -9,9 +9,7 @@ import (
 
 func CreditCardInterceptorStart() {
 
-	logger.WithFields(logrus.Fields{
-		"handler": "credit_card",
-	}).Info("Starting Interceptor")
+	RegisterInterceptor("credit_card")
 
 	AddInterceptor(Interceptor{Regex: regexp.MustCompile(
 		"4[0-9]{12}(?:[0-9]{3})?"), Handler: CreditCardFoundInterceptor, Continue: false})

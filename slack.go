@@ -1,4 +1,4 @@
-package main
+package secbot
 
 import (
 	"fmt"
@@ -12,6 +12,11 @@ var slack_group_map = make(map[string]*slack.Group)
 var slack_channel_map = make(map[string]*slack.Channel)
 var slack_user_map = make(map[string]*slack.User)
 
+/*
+Checks if a message was directed to the bot by checking if it starts with the bot ID.
+
+See: https://godoc.org/github.com/pagarme/secbot/#GetID
+*/
 func AtBot(message string) bool {
 	if strings.HasPrefix(message, fmt.Sprintf("<@%s>", botid)) {
 		return true
@@ -19,6 +24,9 @@ func AtBot(message string) bool {
 	return false
 }
 
+/*
+Gets an slack.Group object by it's ID
+*/
 func GetGroup(id string) (*slack.Group, error) {
 
 	if val, ok := slack_group_map[id]; ok {
@@ -43,6 +51,9 @@ func GetGroup(id string) (*slack.Group, error) {
 	return group, err
 }
 
+/*
+Gets an slack.Channel object by it's ID
+*/
 func GetChannel(id string) (*slack.Channel, error) {
 
 	if val, ok := slack_channel_map[id]; ok {
@@ -67,6 +78,9 @@ func GetChannel(id string) (*slack.Channel, error) {
 	return channel, err
 }
 
+/*
+Gets an slack.User object by it's ID
+*/
 func GetUser(id string) (*slack.User, error) {
 	if val, ok := slack_user_map[id]; ok {
 		return val, nil
@@ -90,6 +104,7 @@ func GetUser(id string) (*slack.User, error) {
 	return user, err
 }
 
+// Gets the bot ID by looking for a user with a matching username as the one set in botname global variable.
 func GetID() (string, error) {
 	users, err := api.GetUsers()
 
@@ -114,7 +129,12 @@ func GetID() (string, error) {
 	return "", nil
 }
 
-func JoinChannels() {
+/*
+This function in called on RTM *slack.ConnectedEvent as a goroutine.
+
+It periodically checks for new channels and joins them.
+*/
+func JoinChannels(notify bool) {
 	for {
 		channels, err := api.GetChannels(true)
 
@@ -139,7 +159,10 @@ func JoinChannels() {
 
 				api.JoinChannel(channel.Name)
 
-				//api.PostMessage(channel.Name, "Every move you make\nEvery step you take\nI'll be watching you", slack.PostMessageParameters{AsUser: true})
+				if notify {
+					PostMessage(channel.Name, "Every move you make\nEvery step you take\nI'll be watching you")
+				}
+
 			}
 		}
 
@@ -149,11 +172,17 @@ func JoinChannels() {
 
 }
 
+/*
+Simple helper function to post a message to a channel.
+*/
 func PostMessage(channel string, message string) {
 	api.PostMessage(channel, message, slack.PostMessageParameters{AsUser: true, LinkNames: 1, Markdown: true})
 
 }
 
+/*
+Simple helper function to post an epheremal message to an user.
+*/
 func PostEphemeralMessage(channel string, user string, message string) {
 	params := slack.NewPostMessageParameters()
 
@@ -161,10 +190,16 @@ func PostEphemeralMessage(channel string, user string, message string) {
 		slack.MsgOptionPostMessageParameters(slack.PostMessageParameters{AsUser: true, LinkNames: 1, Markdown: true}))
 }
 
+/*
+Simple helper function to delete a message.
+*/
 func DeleteMessage(ev *slack.MessageEvent) {
 	api.DeleteMessage(ev.Channel, ev.Timestamp)
 }
 
+/*
+Simple helper function to remove mailto formatting from an string.
+*/
 func StripMailTo(text string) string {
 	if strings.Contains(text, ":") && strings.Contains(text, "|") {
 		return strings.Split(strings.Split(text, ":")[1], "|")[0]
@@ -173,6 +208,9 @@ func StripMailTo(text string) string {
 	}
 }
 
+/*
+Simple helper function to remove url formatting from an string.
+*/
 func StripURL(text string) string {
 	var t = text
 

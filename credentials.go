@@ -1,10 +1,17 @@
-package main
+package secbot
 
 import (
 	"database/sql"
 	"github.com/sirupsen/logrus"
 )
 
+/*
+Defines an external credential object, which should be stored using CredentialsSetCredential
+
+See: https://godoc.org/github.com/pagarme/secbot/#CredentialsSetCredential
+
+See: https://godoc.org/github.com/pagarme/secbot/#CredentialsGetCredential
+*/
 type ExternalCredential struct {
 	Module   string
 	Name     string
@@ -12,6 +19,13 @@ type ExternalCredential struct {
 	Password string
 }
 
+/*
+Lists available credentials for an specific module.
+
+This should be used for listing stored accounts previously set by CredentialsSetCredential().
+
+See: https://godoc.org/github.com/pagarme/secbot/#CredentialsSetCredential
+*/
 func CredentialsListCredentials(module string) ([]ExternalCredential, error) {
 	var creds []ExternalCredential
 
@@ -39,6 +53,11 @@ func CredentialsListCredentials(module string) ([]ExternalCredential, error) {
 	return creds, nil
 }
 
+/*
+Gets an specific credential.
+
+See: https://godoc.org/github.com/pagarme/secbot/#CredentialsSetCredential
+*/
 func CredentialsGetCredential(module string, name string) (ExternalCredential, error) {
 
 	var ex ExternalCredential
@@ -75,6 +94,9 @@ func CredentialsGetCredential(module string, name string) (ExternalCredential, e
 	}
 }
 
+/*
+Sets an external credential, which is stored in the database.
+*/
 func CredentialsSetCredential(cred ExternalCredential) error {
 	var config_id string
 

@@ -1,4 +1,4 @@
-package main
+package secbot
 
 import (
 	"github.com/awnumar/memguard"

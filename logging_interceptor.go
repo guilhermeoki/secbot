@@ -1,4 +1,4 @@
-package main
+package secbot
 
 import (
 	"context"
@@ -83,9 +83,7 @@ const slack_mapping = `
 
 func LoggingInterceptorStart() {
 
-	logger.WithFields(logrus.Fields{
-		"handler": "logging",
-	}).Info("Starting Interceptor")
+	RegisterInterceptor("logging")
 
 	AddInterceptor(Interceptor{
 		Regex: regexp.MustCompile(

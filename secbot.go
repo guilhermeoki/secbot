@@ -1,4 +1,7 @@
-package main
+/*
+This bot aims to provide chat ops and security-related features.
+*/
+package secbot
 
 import (
 	"database/sql"
@@ -24,7 +27,7 @@ var botname = "secbot"
 
 var botid, _ = GetID()
 
-var logs_channel = "bottest"
+var logs_channel = "security_logs"
 
 var db *sql.DB
 
@@ -34,17 +37,9 @@ var starttime = time.Now()
 
 var masteruser = "kamushadenes"
 
-func stringInSlice(a string, list []string) bool {
-	for _, b := range list {
-		if b == a {
-			return true
-		}
-	}
-	return false
-}
-
 var slack_token, _ = memguard.NewImmutableFromBytes([]byte(os.Getenv("SLACK_TOKEN")))
 
+// Reads the <slack_token> variable and creates a new Slack client, destroying the token afterwards.
 func GetAPI() *slack.Client {
 	api := slack.New(string(slack_token.Buffer()))
 
@@ -53,12 +48,18 @@ func GetAPI() *slack.Client {
 	return api
 }
 
+/*
+Calls InterceptorInterceptorStart(), registering and logging the interceptor and its handlers.
+*/
 func StartInterceptors() {
-	// Ensure CreditCardInterceptor is listed first to prevent credit card logging
+	// Ensure CreditCardInterceptor is listed first to prevent credit card logging.
 	CreditCardInterceptorStart()
 	LoggingInterceptorStart()
 }
 
+/*
+Calls HandlerHandlerStart(), registering and logging the handler and its commands.
+*/
 func StartHandlers() {
 	TheEndHandlerStart()
 	SlackHandlerStart()
@@ -72,6 +73,7 @@ func StartHandlers() {
 	S3UploadHandlerStart()
 }
 
+// Initializes the logger and sets logrus colors.
 func init() {
 	formatter := new(prefixed.TextFormatter)
 	formatter.FullTimestamp = true
@@ -85,6 +87,7 @@ func init() {
 
 }
 
+// Gets the caller of a function, useful when printing out errors.
 func GetCaller() (string, string) {
 
 	// we get the callers as uintptrs - but we just need 1
@@ -105,20 +108,6 @@ func GetCaller() (string, string) {
 	fl, _ := fun.FileLine(fun.Entry())
 
 	return fun.Name(), fl
-}
-
-func waitTimeout(wg *sync.WaitGroup, timeout time.Duration) bool {
-	c := make(chan struct{})
-	go func() {
-		defer close(c)
-		wg.Wait()
-	}()
-	select {
-	case <-c:
-		return false // completed normally
-	case <-time.After(timeout):
-		return true // timed out
-	}
 }
 
 func main() {
@@ -155,10 +144,6 @@ func main() {
 	StartInterceptors()
 	StartHandlers()
 
-	//logger := log.New(os.Stdout, "slack-bot: ", log.Lshortfile|log.LstdFlags)
-	//slack.SetLogger(logger)
-	//api.SetDebug(true)
-
 	rtm := api.NewRTM()
 	go rtm.ManageConnection()
 
@@ -174,7 +159,7 @@ func main() {
 				"connectionCounter": ev.ConnectionCount,
 			}).Info("Connected Successfully")
 
-			go JoinChannels()
+			go JoinChannels(true)
 
 		case *slack.FileSharedEvent:
 			logger.WithFields(logrus.Fields{

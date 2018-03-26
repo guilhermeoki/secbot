@@ -1,4 +1,4 @@
-package main
+package secbot
 
 import (
 	"database/sql"
@@ -11,6 +11,15 @@ import (
 
 var db_file = "./secbot.db"
 
+/*
+Initialize the SQLite3 database object.
+
+You should only call this once, and store it as a global variable.
+
+This disables the connection pooling by calling SetMaxOpenConns(1), due to lock limitations on SQLite itself.
+
+Also, synchronous access is turned off and journal is stored in memory.
+*/
 func GetDB() (*sql.DB, error) {
 
 	dbx, err := sql.Open("sqlite3", db_file)
@@ -34,6 +43,11 @@ func GetDB() (*sql.DB, error) {
 	return dbx, err
 }
 
+/*
+This function issues the CREATE TABLE statements required for the bot to function.
+
+This is only called if the database secbot.db isn't found in the working directory.
+*/
 func Bootstrap() {
 	if _, err := os.Stat(db_file); err != nil {
 
@@ -61,6 +75,11 @@ func Bootstrap() {
 	}
 }
 
+/*
+Gets the handlers specified config value, previously set by SetHandlerConfig().
+
+See: https://godoc.org/github.com/pagarme/secbot/#SetHandlerConfig
+*/
 func GetHandlerConfig(handler string, key string) (string, error) {
 	var config_id string
 	var value string
@@ -94,6 +113,11 @@ func GetHandlerConfig(handler string, key string) (string, error) {
 	}
 }
 
+/*
+Sets the handlers specified config value, which can later be acessed with GetHandlerConfig().
+
+See: https://godoc.org/github.com/pagarme/secbot/#GetHandlerConfig
+*/
 func SetHandlerConfig(handler string, key string, value string) {
 	var config_id string
 
@@ -143,6 +167,11 @@ func SetHandlerConfig(handler string, key string, value string) {
 	}
 }
 
+/*
+Gets a list of tracked users, previously set with TrackUser().
+
+See: https://godoc.org/github.com/pagarme/secbot/#TrackUser
+*/
 func GetTrackedUsers(module string, name string, section string) ([]string, error) {
 
 	selectStmt := "SELECT id, user FROM usertrack WHERE module = ? AND name = ? AND section = ?"
@@ -182,6 +211,13 @@ func GetTrackedUsers(module string, name string, section string) ([]string, erro
 
 }
 
+/*
+Tracks a user, which can later be accessed with GetTrackedUsers().
+
+<action> should be either INSERT or DELETE.
+
+See: https://godoc.org/github.com/pagarme/secbot/#GetTrackedUsers
+*/
 func TrackUser(module string, name string, section string, user string, action string) {
 
 	var user_id string
@@ -235,6 +271,11 @@ func TrackUser(module string, name string, section string, user string, action s
 
 }
 
+/*
+List data sections previously tracked by TrackData()
+
+See: https://godoc.org/github.com/pagarme/secbot/#TrackData
+*/
 func ListTrackedData(module string, name string) ([]string, error) {
 
 	selectStmt := "SELECT id, section FROM datatrack WHERE module = ? AND name = ?"
@@ -274,6 +315,11 @@ func ListTrackedData(module string, name string) ([]string, error) {
 
 }
 
+/*
+List data previously tracked by TrackData().
+
+See: https://godoc.org/github.com/pagarme/secbot/#TrackData
+*/
 func GetTrackedData(module string, name string, section string) (string, error) {
 
 	var value string
@@ -301,6 +347,17 @@ func GetTrackedData(module string, name string, section string) (string, error) 
 	return value, nil
 }
 
+/*
+Tracks handlers abstract data.
+
+You should use this when dealing with a large amount of values, since it stores everything in the same row, reducing the number of scans.
+
+you should Split() and Join() the values if necessary. Usually, a blank space is used as separator, but feel free to use anything you want.
+
+See: https://godoc.org/github.com/pagarme/secbot/#ListTrackedData
+
+See: https://godoc.org/github.com/pagarme/secbot/#GetTrackedData
+*/
 func TrackData(module string, name string, section string, value string, action string) {
 
 	var data_id string
@@ -360,6 +417,9 @@ func TrackData(module string, name string, section string, value string, action 
 
 }
 
+/*
+Simple function to get the current user's home directory.
+*/
 func GetHome() string {
 	usr, err := user.Current()
 
