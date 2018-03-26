@@ -251,9 +251,12 @@ func main() {
 							ev.Username = user.Name
 
 							msg := fmt.Sprintf("@%s\n*### Status Report ###*\n", ev.Username)
-							msg += fmt.Sprintf("\n*Start Time:* %s", starttime.String())
+							msg += fmt.Sprintf("\n*Start Time:* %s", starttime.Format("2006-01-02T15:04:05"))
 							msg += fmt.Sprintf("\n*Uptime:* %s", time.Now().Sub(starttime))
 							msg += fmt.Sprintf("\n*Latency:* %s", latency)
+							msg += fmt.Sprintf("\n*Handlers:* %d", len(handlers))
+							msg += fmt.Sprintf("\n*Commands:* %d", len(commands))
+							msg += fmt.Sprintf("\n*Interceptors:* %d", len(interceptors))
 
 							PostMessage(ev.Channel, msg)
 
