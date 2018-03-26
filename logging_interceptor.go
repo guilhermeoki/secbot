@@ -12,6 +12,7 @@ import (
 	"strconv"
 	"time"
 	"strings"
+	"encoding/json"
 )
 
 var logging_endpoint = ""
@@ -90,6 +91,12 @@ func LoggingInterceptorStart() {
 		".*"), Handler: LoggingInterceptor, Continue: true})
 	AddCommand(Command{Regex: regexp.MustCompile("logging (?P<command>set endpoint) (?P<endpoint>\\S+)"),
 		Help: "Define o endpoint de logs", Handler: LoggingSetEndpointCommand})
+	AddCommand(Command{Regex: regexp.MustCompile(
+		"logging (?P<command>get logs) (?P<channel>\\S+) (?P<start_date>\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}) (?P<end_date>\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2})"),
+		Help: "Obtém logs do intervalo especificado", Handler: LoggingGetLogCommand})
+	AddCommand(Command{Regex: regexp.MustCompile(
+		"logging (?P<command>get logs) (?P<channel>\\S+) (?P<match>.*) (?P<start_date>\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}) (?P<end_date>\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2})"),
+		Help: "Obtém logs do intervalo especificado que contenham o texto <match>", Handler: LoggingGetLogCommand})
 
 	var err error
 
@@ -182,10 +189,12 @@ func LoggingInterceptor(md map[string]string, ev *slack.MessageEvent) {
 		gr, _ := GetGroup(ev.Channel)
 		channel = gr.Name
 		isPrivate = true
-	} else {
+	} else if strings.HasPrefix(ev.Channel, "C") {
 		ch, _ := GetChannel(ev.Channel)
 		channel = ch.Name
 		isPrivate = false
+	} else {
+		return
 	}
 
 	timestamp := time.Unix(timestamp_1, timestamp_2)
@@ -247,4 +256,122 @@ func LoggingSetEndpointCommand(md map[string]string, ev *slack.MessageEvent) {
 			ev.Username, end, err.Error()))
 	}
 
+}
+
+func LoggingGetLogCommand(md map[string]string, ev *slack.MessageEvent) {
+
+	if len(logging_endpoint) == 0 || logging_client == nil {
+		PostMessage(ev.Channel, fmt.Sprintf("@%s Não foi possível obter uma conexão com o endpoint", ev.Username))
+		return
+	}
+
+	var channel slack.Channel
+	var group slack.Group
+
+	var members []string
+
+	channels, _ := api.GetChannels(false)
+
+	for _, ch := range channels {
+		if ch.Name == md["channel"] {
+			channel, _ := GetChannel(ch.ID)
+			members = channel.Members
+			break
+		}
+	}
+
+	groups, _ := api.GetGroups(false)
+
+	for _, gr := range groups {
+		if gr.Name == md["channel"] {
+			group, _ := GetGroup(gr.ID)
+			members = group.Members
+			break
+		}
+	}
+
+	if &channel == nil && &group == nil {
+		PostMessage(ev.Channel, fmt.Sprintf("@%s Canal `%s` não encontrado", ev.Username, md["channel"]))
+		return
+	}
+
+	if !stringInSlice(ev.User, members) {
+		fmt.Println(ev.User)
+		fmt.Println(members)
+		Unauthorized(md, ev)
+		return
+	}
+
+	termQuery := elastic.NewTermQuery("channel", md["channel"])
+
+	rangeQuery := elastic.NewRangeQuery("timestamp")
+
+	start, _ := time.Parse("2006-01-02T15:04:05", md["start_date"])
+	end, _ := time.Parse("2006-01-02T15:04:05", md["end_date"])
+
+	rangeQuery.Gte(start.Format("2006-01-02T15:04:05.000Z"))
+	rangeQuery.Lte(end.Format("2006-01-02T15:04:05.000Z"))
+	rangeQuery.TimeZone("-03:00")
+
+	query := elastic.NewBoolQuery()
+
+	query = query.Must(termQuery)
+	query = query.Must(rangeQuery)
+
+	if val, ok := md["match"]; ok {
+		wildcardQuery := elastic.NewWildcardQuery("text", fmt.Sprintf("*%s*", val))
+		query = query.Must(wildcardQuery)
+	}
+
+	searchResult, err := logging_client.Search().
+		Index(logging_index). // search in index "tweets"
+		Query(query). // specify the query
+		Sort("timestamp", true). // sort by "user" field, ascending
+		From(0).Size(10). // take documents 0-9
+		Pretty(true). // pretty print request and response JSON
+		Do(context.Background()) // execute
+	if err != nil {
+		// Handle error
+		panic(err)
+	}
+
+	if searchResult.TotalHits() == 0 {
+		PostMessage(ev.Channel, fmt.Sprintf("@%s nenhum resultado encontrado",
+			ev.Username))
+		return
+	}
+
+	var results []string
+
+	for _, hit := range searchResult.Hits.Hits {
+		// hit.Index contains the name of the index
+
+		// Deserialize hit.Source into a Tweet (could also be just a map[string]interface{}).
+		var t LoggingSlackMessage
+		err := json.Unmarshal(*hit.Source, &t)
+		if err != nil {
+			// Deserialization failed
+		}
+
+		// Work with tweet
+
+		results = append(results, fmt.Sprintf("[%s] %s: %s", t.Timestamp, t.Username, t.Text))
+	}
+
+
+	PostMessage(ev.Channel, fmt.Sprintf("@%s %d resultados encontrados em %d milisegundos",
+		ev.Username, len(results), searchResult.TookInMillis))
+
+	var share_channels []string
+	share_channels = append(share_channels, ev.Channel)
+
+	params := slack.FileUploadParameters{
+		Title:    fmt.Sprintf("Logs for channel #%s, from %s to %s.txt", md["channel"], start.Format("2006-01-02T15:04:05.000Z"), end.Format("2006-01-02T15:04:05.000Z")),
+		Filetype: "txt",
+		File:     fmt.Sprintf("%s_%s_%s.txt", md["channel"], start.Format("2006-01-02T15:04:05"), end.Format("2006-01-02T15:04:05")),
+		Content:  strings.Join(results, "\n"),
+		Channels: share_channels,
+	}
+
+	api.UploadFile(params)
 }

@@ -65,130 +65,125 @@ func AuthGetSections() ([]string, error) {
 }
 
 func AuthListCommand(md map[string]string, ev *slack.MessageEvent) {
-	if AtBot(ev.Text) {
-		sections, _ := AuthGetSections()
+	sections, _ := AuthGetSections()
 
-		var authlist map[string][]string
+	var authlist map[string][]string
 
-		authlist = make(map[string][]string)
+	authlist = make(map[string][]string)
 
-		for _, k := range sections {
-			authlist[k], _ = AuthGetPermission(k)
-		}
-
-		var msg = fmt.Sprintf("@%s\n*### Lista de Permissões ###*\n", ev.Username)
-
-		for k, v := range authlist {
-			msg += fmt.Sprintf("\n[%s] %s", k, strings.Join(v, " "))
-		}
-
-		PostMessage(ev.Channel, msg)
+	for _, k := range sections {
+		authlist[k], _ = AuthGetPermission(k)
 	}
+
+	var msg = fmt.Sprintf("@%s\n*### Lista de Permissões ###*\n", ev.Username)
+
+	for k, v := range authlist {
+		msg += fmt.Sprintf("\n[%s] %s", k, strings.Join(v, " "))
+	}
+
+	PostMessage(ev.Channel, msg)
 }
 
 func AuthAddCommand(md map[string]string, ev *slack.MessageEvent) {
-	if AtBot(ev.Text) {
-		if !IsAuthorized("authorizer", ev.Username) {
-			Unauthorized(md, ev)
-			return
-		}
-
-		sections := strings.Split(md["permissions"], " ")
-		users := strings.Split(md["users"], " ")
-
-		var added map[string][]string
-		added = make(map[string][]string)
-
-		var alreadyexists map[string][]string
-		alreadyexists = make(map[string][]string)
-
-		var errored map[string][]string
-		errored = make(map[string][]string)
-
-		for _, section := range sections {
-			for _, user := range users {
-				exists, err := AuthAddPermission(section, user)
-
-				if !exists && err == nil {
-					added[section] = append(added[section], user)
-				} else if exists && err == nil {
-					alreadyexists[section] = append(alreadyexists[section], user)
-				} else if err != nil {
-					errored[section] = append(errored[section], user)
-				}
-			}
-		}
-
-		var msg = fmt.Sprintf("@%s", ev.Username)
-
-		for _, section := range sections {
-			msg += fmt.Sprintf("\n*## [%s] ##*\n\n", section)
-			if len(added[section]) > 0 {
-				msg += fmt.Sprintf("*Adicionado:* %s\n", strings.Join(added[section], " "))
-			}
-			if len(alreadyexists[section]) > 0 {
-				msg += fmt.Sprintf("*Já existe:* %s\n", strings.Join(alreadyexists[section], " "))
-			}
-			if len(errored[section]) > 0 {
-				msg += fmt.Sprintf("*Erro:* %s\n", strings.Join(errored[section], " "))
-			}
-		}
-
-		PostMessage(ev.Channel, msg)
+	if !IsAuthorized("authorizer", ev.Username) {
+		Unauthorized(md, ev)
+		return
 	}
+
+	sections := strings.Split(md["permissions"], " ")
+	users := strings.Split(md["users"], " ")
+
+	var added map[string][]string
+	added = make(map[string][]string)
+
+	var alreadyexists map[string][]string
+	alreadyexists = make(map[string][]string)
+
+	var errored map[string][]string
+	errored = make(map[string][]string)
+
+	for _, section := range sections {
+		for _, user := range users {
+			exists, err := AuthAddPermission(section, user)
+
+			if !exists && err == nil {
+				added[section] = append(added[section], user)
+			} else if exists && err == nil {
+				alreadyexists[section] = append(alreadyexists[section], user)
+			} else if err != nil {
+				errored[section] = append(errored[section], user)
+			}
+		}
+	}
+
+	var msg = fmt.Sprintf("@%s", ev.Username)
+
+	for _, section := range sections {
+		msg += fmt.Sprintf("\n*## [%s] ##*\n\n", section)
+		if len(added[section]) > 0 {
+			msg += fmt.Sprintf("*Adicionado:* %s\n", strings.Join(added[section], " "))
+		}
+		if len(alreadyexists[section]) > 0 {
+			msg += fmt.Sprintf("*Já existe:* %s\n", strings.Join(alreadyexists[section], " "))
+		}
+		if len(errored[section]) > 0 {
+			msg += fmt.Sprintf("*Erro:* %s\n", strings.Join(errored[section], " "))
+		}
+	}
+
+	PostMessage(ev.Channel, msg)
 }
 
 func AuthDelCommand(md map[string]string, ev *slack.MessageEvent) {
-	if AtBot(ev.Text) {
-		if !IsAuthorized("authorizer", ev.Username) {
-			Unauthorized(md, ev)
-			return
-		}
-
-		sections := strings.Split(md["permissions"], " ")
-		users := strings.Split(md["users"], " ")
-
-		var removed map[string][]string
-		removed = make(map[string][]string)
-
-		var notexists map[string][]string
-		notexists = make(map[string][]string)
-
-		var errored map[string][]string
-		errored = make(map[string][]string)
-
-		for _, section := range sections {
-			for _, user := range users {
-				exists, err := AuthRemovePermission(section, user)
-
-				if exists && err == nil {
-					removed[section] = append(removed[section], user)
-				} else if !exists && err == nil {
-					notexists[section] = append(notexists[section], user)
-				} else if err != nil {
-					fmt.Print(err)
-					errored[section] = append(errored[section], user)
-				}
-			}
-		}
-
-		var msg = fmt.Sprintf("@%s", ev.Username)
-
-		for _, section := range sections {
-			msg += fmt.Sprintf("\n*## [%s] ##*\n", section)
-			if len(removed[section]) > 0 {
-				msg += fmt.Sprintf("*Removido:* %s\n", strings.Join(removed[section], " "))
-			}
-			if len(notexists[section]) > 0 {
-				msg += fmt.Sprintf("*Não Encontrado:* %s\n", strings.Join(notexists[section], " "))
-			}
-			if len(errored[section]) > 0 {
-				msg += fmt.Sprintf("*Erro:* %s\n", strings.Join(errored[section], " "))
-			}
-		}
-
-		PostMessage(ev.Channel, msg)
+	if !IsAuthorized("authorizer", ev.Username) {
+		Unauthorized(md, ev)
+		return
 	}
+
+	sections := strings.Split(md["permissions"], " ")
+	users := strings.Split(md["users"], " ")
+
+	var removed map[string][]string
+	removed = make(map[string][]string)
+
+	var notexists map[string][]string
+	notexists = make(map[string][]string)
+
+	var errored map[string][]string
+	errored = make(map[string][]string)
+
+	for _, section := range sections {
+		for _, user := range users {
+			exists, err := AuthRemovePermission(section, user)
+
+			if exists && err == nil {
+				removed[section] = append(removed[section], user)
+			} else if !exists && err == nil {
+				notexists[section] = append(notexists[section], user)
+			} else if err != nil {
+				fmt.Print(err)
+				errored[section] = append(errored[section], user)
+			}
+		}
+	}
+
+	var msg = fmt.Sprintf("@%s", ev.Username)
+
+	for _, section := range sections {
+		msg += fmt.Sprintf("\n*## [%s] ##*\n", section)
+		if len(removed[section]) > 0 {
+			msg += fmt.Sprintf("*Removido:* %s\n", strings.Join(removed[section], " "))
+		}
+		if len(notexists[section]) > 0 {
+			msg += fmt.Sprintf("*Não Encontrado:* %s\n", strings.Join(notexists[section], " "))
+		}
+		if len(errored[section]) > 0 {
+			msg += fmt.Sprintf("*Erro:* %s\n", strings.Join(errored[section], " "))
+		}
+	}
+
+	PostMessage(ev.Channel, msg)
+
 }
 
 func AuthRemovePermission(section string, user string) (bool, error) {

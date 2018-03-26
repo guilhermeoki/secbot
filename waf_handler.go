@@ -76,6 +76,11 @@ func WAFGetDefaultProfile() string {
 }
 
 func WAFSetDefaultAccountCommand(md map[string]string, ev *slack.MessageEvent) {
+	if !IsAuthorized("waf", ev.Username) {
+		Unauthorized(md, ev)
+		return
+	}
+
 	if !AWSHasProfile(md["account"]) {
 		PostMessage(ev.Channel, fmt.Sprintf("@%s Conta `%s` inválida, os valores possíveis são:\n%s",
 			ev.Username, md["account"], strings.Join(WAFGetProfilesWithDefault(), "\n")))
@@ -89,6 +94,11 @@ func WAFSetDefaultAccountCommand(md map[string]string, ev *slack.MessageEvent) {
 }
 
 func WAFSetDefaultRegionCommand(md map[string]string, ev *slack.MessageEvent) {
+	if !IsAuthorized("waf", ev.Username) {
+		Unauthorized(md, ev)
+		return
+	}
+
 	if !AWSHasRegion(md["region"]) {
 		PostMessage(ev.Channel, fmt.Sprintf("@%s Região `%s` inválida, os valores possíveis são:\n%s",
 			ev.Username, md["region"], strings.Join(AWSListRegions(), "\n")))
@@ -102,6 +112,10 @@ func WAFSetDefaultRegionCommand(md map[string]string, ev *slack.MessageEvent) {
 }
 
 func WAFSetDefaultIPSetCommand(md map[string]string, ev *slack.MessageEvent) {
+	if !IsAuthorized("waf", ev.Username) {
+		Unauthorized(md, ev)
+		return
+	}
 
 	SetHandlerConfig("waf", "default_ipset", md["ipset"])
 	PostMessage(ev.Channel, fmt.Sprintf("@%s IPSet padrão setada para `%s`",

@@ -98,6 +98,12 @@ func TinyLetterSetAccountCommand(md map[string]string, ev *slack.MessageEvent) {
 }
 
 func TinyLetterSetDefaultAccountCommand(md map[string]string, ev *slack.MessageEvent) {
+
+	if !IsAuthorized("tinyletter", ev.Username) {
+		Unauthorized(md, ev)
+		return
+	}
+
 	creds, _ := TinyLetterListAccounts()
 
 	if !ReadmeIOHasAccount(md["account"]) {
@@ -222,6 +228,11 @@ func TinyLetterIsDomainAllowed(account string, domain string) bool {
 }
 
 func TinyLetterSetAllowedDomainsCommand(md map[string]string, ev *slack.MessageEvent) {
+	if !IsAuthorized("tinyletter", ev.Username) {
+		Unauthorized(md, ev)
+		return
+	}
+
 	creds, _ := TinyLetterListAccounts()
 
 	avalid, account := TinyLetterValidateAccount(md)

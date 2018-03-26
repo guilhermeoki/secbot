@@ -123,6 +123,11 @@ func ReadmeIOValidateAccount(md map[string]string) (bool, string) {
 }
 
 func ReadmeIOSetDefaultAccountCommand(md map[string]string, ev *slack.MessageEvent) {
+	if !IsAuthorized("readmeio", ev.Username) {
+		Unauthorized(md, ev)
+		return
+	}
+
 	creds, _ := ReadmeIOListAccounts()
 
 	if !ReadmeIOHasAccount(md["account"]) {

@@ -25,6 +25,7 @@ func SlackListNoMFACommand(md map[string]string, ev *slack.MessageEvent) {
 	local_nomfa, _ := GetTrackedUsers("slack", info.Name, "nomfa")
 
 	PostMessage(ev.Channel, fmt.Sprintf("@%s Usuários sem MFA: %s", ev.Username, strings.Join(local_nomfa, " ")))
+
 }
 
 func SlackGetMembers() {

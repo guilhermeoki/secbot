@@ -76,6 +76,11 @@ func GitHubHasOrganization(organization string) bool {
 }
 
 func GitHubInviteUserCommand(md map[string]string, ev *slack.MessageEvent) {
+	if !IsAuthorized("github", ev.Username) {
+		Unauthorized(md, ev)
+		return
+	}
+	
 	avalid, organization := GitHubValidateOrganization(md)
 
 	if !avalid {
@@ -148,6 +153,11 @@ func GitHubInviteUserCommand(md map[string]string, ev *slack.MessageEvent) {
 }
 
 func GitHubSetDefaultOrganizationCommand(md map[string]string, ev *slack.MessageEvent) {
+	if !IsAuthorized("github", ev.Username) {
+		Unauthorized(md, ev)
+		return
+	}
+
 	creds, _ := GitHubListOrganizations()
 
 	if !GitHubHasOrganization(md["organization"]) {
