@@ -410,7 +410,7 @@ func TrackData(module string, name string, section string, value string, action 
 
 			p, _ := db.Prepare(sqlStmt)
 
-			p.Exec(value, module, name, section)
+			p.Exec(value, module, section, name)
 		}
 
 	}
