@@ -362,7 +362,7 @@ func TrackData(module string, name string, section string, value string, action 
 
 	var data_id string
 
-	selectStmt := "SELECT id FROM usertrack WHERE module = ? AND name = ? AND section = ?"
+	selectStmt := "SELECT id FROM datatrack WHERE module = ? AND name = ? AND section = ?"
 
 	err := db.QueryRow(selectStmt, module, name, section).Scan(&data_id)
 
