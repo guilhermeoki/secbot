@@ -43,7 +43,7 @@ var slack_token, _ = memguard.NewImmutableFromBytes([]byte(os.Getenv("SLACK_TOKE
 func GetAPI() *slack.Client {
 	api := slack.New(string(slack_token.Buffer()))
 
-	slack_token.Destroy()
+	//slack_token.Destroy()
 
 	return api
 }

@@ -140,12 +140,14 @@ func SlackGetMembers() {
 		for _, v := range local_ownerList {
 			if !stringInSlice(v, ownerList) {
 				removed_ownerList = append(removed_ownerList, v)
+				TrackUser("slack", info.Name, "owner", v, "DELETE")
 			}
 		}
 
 		for _, v := range local_adminList {
 			if !stringInSlice(v, adminList) {
 				removed_adminList = append(removed_adminList, v)
+				TrackUser("slack", info.Name, "admin", v, "DELETE")
 			}
 		}
 

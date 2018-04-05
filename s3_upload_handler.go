@@ -60,11 +60,13 @@ func S3Upload(ev *slack.MessageEvent) {
 
 	var headers = make(map[string]string)
 
-	headers["Authorization"] = fmt.Sprintf("Bearer %s", slack_token)
+	headers["Authorization"] = fmt.Sprintf("Bearer %s", slack_token.Buffer())
+
+	println(headers["Authorization"])
 
 	opts := grequests.RequestOptions{Headers: headers}
 
-	resp, _ := grequests.Get(ev.File.URLPrivate, &opts)
+	resp, _ := grequests.Get(ev.File.URLPrivateDownload, &opts)
 
 	body := bytes.NewReader(resp.Bytes())
 
