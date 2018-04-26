@@ -704,6 +704,7 @@ func GitHubGetMembers() {
 			for _, v := range local_ownerList {
 				if !stringInSlice(v, ownerList) {
 					removed_ownerList = append(removed_ownerList, v)
+					TrackUser("github", org, "owner", v, "DELETE")
 				}
 			}
 
