@@ -6,28 +6,29 @@ package secbot
 import (
 	"database/sql"
 	"fmt"
-	"github.com/awnumar/memguard"
-	"github.com/nlopes/slack"
-	"github.com/sirupsen/logrus"
-	"github.com/x-cray/logrus-prefixed-formatter"
-	"golang.org/x/sys/unix"
 	"math/rand"
 	"os"
 	"runtime"
 	"strings"
 	"syscall"
 	"time"
+
+	"github.com/awnumar/memguard"
+	"github.com/nlopes/slack"
+	"github.com/sirupsen/logrus"
+	"github.com/x-cray/logrus-prefixed-formatter"
+	"golang.org/x/sys/unix"
 )
 
 var logger = logrus.New()
 
 var api = GetAPI()
 
-var botname = "secbot"
+var botname = os.Getenv("BOT_NAME")
 
 var botid, _ = GetID()
 
-var logs_channel = "security_logs"
+var logs_channel = os.Getenv("CHANNEL_NAME")
 
 var db *sql.DB
 
@@ -35,7 +36,7 @@ var latency time.Duration
 
 var starttime = time.Now()
 
-var masteruser = "kamushadenes"
+var masteruser = os.Getenv("MASTER_USER")
 
 var slack_token, _ = memguard.NewImmutableFromBytes([]byte(os.Getenv("SLACK_TOKEN")))
 
@@ -177,11 +178,21 @@ func Run() {
 
 		case *slack.MessageEvent:
 			var proceedInterceptor = true
+			var text_veri = ""
+			var user_ver = ""
+			err := ev.SubMessage
+			if err == nil {
+				text_veri = ev.Text
+				user_ver = ev.User
+			} else {
+				text_veri = ev.SubMessage.Text
+				user_ver = ev.SubMessage.User
+			}
 
 			for _, c := range interceptors {
 				if proceedInterceptor {
 					n1 := c.Regex.SubexpNames()
-					ntext := strings.Join(strings.Split(ev.Text, " "), "")
+					ntext := strings.Join(strings.Split(text_veri, " "), "")
 					r1 := c.Regex.FindAllStringSubmatch(ntext, -1)
 
 					if len(r1) > 0 {
@@ -194,8 +205,8 @@ func Run() {
 
 						if len(r2) > 0 {
 
-							if len(ev.User) > 0 {
-								user, _ := GetUser(ev.User)
+							if len(user_ver) > 0 {
+								user, _ := GetUser(user_ver)
 
 								if user != nil {
 									ev.Username = user.Name
@@ -212,7 +223,7 @@ func Run() {
 
 			}
 
-			if ev.User != botid {
+			if user_ver != botid {
 
 				if ev.File != nil && strings.HasPrefix(ev.Channel, "D") {
 					go S3Upload(ev)
@@ -224,19 +235,19 @@ func Run() {
 					"message": ev,
 				}).Debug("New Message")
 
-				if AtBot(ev.Text) {
-					l := strings.Split(ev.Text, " ")
+				if AtBot(text_veri) {
+					l := strings.Split(text_veri, " ")
 					if len(l) >= 2 {
 						if strings.ToUpper(l[1]) == "PING" {
 
-							user, _ := GetUser(ev.User)
+							user, _ := GetUser(user_ver)
 
 							ev.Username = user.Name
 
 							PostMessage(ev.Channel, fmt.Sprintf("@%s PONG", ev.Username))
 							continue
 						} else if strings.ToUpper(l[1]) == "STATUS" {
-							user, _ := GetUser(ev.User)
+							user, _ := GetUser(user_ver)
 
 							ev.Username = user.Name
 
@@ -268,11 +279,11 @@ func Run() {
 					}
 				}
 
-				if AtBot(ev.Text) {
+				if AtBot(text_veri) {
 					var matched = false
 					for _, c := range commands {
 						n1 := c.Regex.SubexpNames()
-						r1 := c.Regex.FindAllStringSubmatch(ev.Text, -1)
+						r1 := c.Regex.FindAllStringSubmatch(text_veri, -1)
 
 						if len(r1) > 0 {
 							r2 := r1[0]
@@ -286,7 +297,7 @@ func Run() {
 
 								matched = true
 
-								user, _ := GetUser(ev.User)
+								user, _ := GetUser(user_ver)
 
 								if user != nil {
 
@@ -296,10 +307,10 @@ func Run() {
 								logger.WithFields(logrus.Fields{
 									"prefix":   "main",
 									"channel":  ev.Channel,
-									"user":     ev.User,
+									"user":     user_ver,
 									"username": ev.Username,
 									"command":  md["command"],
-									"text":     ev.Text,
+									"text":     text_veri,
 								}).Info("Command Received")
 
 								if &c.RequiredPermission != nil && len(c.RequiredPermission) > 0 {

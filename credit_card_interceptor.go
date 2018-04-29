@@ -1,10 +1,11 @@
 package secbot
 
 import (
+	"regexp"
+
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/nlopes/slack"
 	"github.com/sirupsen/logrus"
-	"regexp"
 )
 
 func CreditCardInterceptorStart() {
@@ -30,17 +31,24 @@ func CreditCardInterceptorStart() {
 If a credit card is found, delete the message and warn the user it's against PCI rules.
 */
 func CreditCardFoundInterceptor(md map[string]string, ev *slack.MessageEvent) {
-	if ev.User != botid {
+	var user_ver = ""
+	err := ev.SubMessage
+	if err == nil {
+		user_ver = ev.User
+	} else {
+		user_ver = ev.SubMessage.User
+	}
+	if user_ver != botid {
 		DeleteMessage(ev)
 
 		logger.WithFields(logrus.Fields{
 			"prefix":   "main",
 			"channel":  ev.Channel,
-			"user":     ev.User,
+			"user":     user_ver,
 			"username": ev.Username,
 		}).Info("Card Detected")
 
-		PostEphemeralMessage(ev.Channel, ev.User, "O PCI determina que dados sensíveis de cartão (PAN e CVV) "+
+		PostEphemeralMessage(ev.Channel, user_ver, "O PCI determina que dados sensíveis de cartão (PAN e CVV) "+
 			"não devem ser compartilhados em mídias como "+
 			"email, SMS, Slack, Telegram, Whatsapp e outros IMs. Por favor, respeite essa regra.")
 	}

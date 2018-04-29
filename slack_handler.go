@@ -2,11 +2,12 @@ package secbot
 
 import (
 	"fmt"
-	"github.com/nlopes/slack"
-	"github.com/sirupsen/logrus"
 	"regexp"
 	"strings"
 	"time"
+
+	"github.com/nlopes/slack"
+	"github.com/sirupsen/logrus"
 )
 
 func SlackHandlerStart() {
@@ -19,6 +20,39 @@ func SlackHandlerStart() {
 		Usage:       "slack list nomfa",
 		Handler:     SlackListNoMFACommand,
 		HandlerName: "slack"})
+
+	AddCommand(Command{
+		Regex:              regexp.MustCompile("slack (?P<command>invite) (?P<email>\\S+)"),
+		Help:               "Envia convite para o Slack",
+		RequiredPermission: "slack",
+		HandlerName:        "slack",
+		Usage:              "slack invite <email>",
+		Parameters: map[string]string{
+			"email": "\\S+",
+		},
+		Handler: SlackInvate})
+
+	AddCommand(Command{
+		Regex:              regexp.MustCompile("slack (?P<command>revoke) (?P<email>\\S+)"),
+		Help:               "Exclui o convite do Slack",
+		RequiredPermission: "slack",
+		HandlerName:        "slack",
+		Usage:              "slack revoke <email>",
+		Parameters: map[string]string{
+			"email": "\\S+",
+		},
+		Handler: SlackRevoke})
+
+	AddCommand(Command{
+		Regex:              regexp.MustCompile("slack (?P<command>delete) (?P<email>\\S+)"),
+		Help:               "Exclui o usuario do Slack",
+		RequiredPermission: "slack",
+		HandlerName:        "slack",
+		Usage:              "slack delete <email>",
+		Parameters: map[string]string{
+			"email": "\\S+",
+		},
+		Handler: SlackDelete})
 
 	go SlackGetMembers()
 }
@@ -45,6 +79,51 @@ func SlackListNoMFACommand(md map[string]string, ev *slack.MessageEvent) {
 
 	PostMessage(ev.Channel, fmt.Sprintf("@%s Usuários sem MFA: %s", ev.Username, strings.Join(local_nomfa, " ")))
 
+}
+
+func SlackInvate(md map[string]string, ev *slack.MessageEvent) {
+	logger.WithFields(logrus.Fields{
+		"prefix": "rtm.IncomingEvents",
+		"text":   ev.Text,
+		"name":   ev.Username,
+		"user":   ev.User,
+	}).Info("Invite to Slack")
+	mail := StripMailTo(ev.Text)
+	if invite(mail) == true {
+		PostMessage(ev.Channel, fmt.Sprintf("@%s O convite para %s foi enviado com Sucesso", ev.Username, mail))
+	} else {
+		PostMessage(ev.Channel, fmt.Sprintf("@%s Erro ao enviar o convite para o email: %s", ev.Username, mail))
+	}
+}
+
+func SlackRevoke(md map[string]string, ev *slack.MessageEvent) {
+	logger.WithFields(logrus.Fields{
+		"prefix": "rtm.IncomingEvents",
+		"text":   ev.Text,
+		"name":   ev.Username,
+		"user":   ev.User,
+	}).Info("Revoke invite Slack")
+	mail := StripMailTo(ev.Text)
+	if delInvite(mail) == true {
+		PostMessage(ev.Channel, fmt.Sprintf("@%s O convite para %s foi revogado com Sucesso", ev.Username, mail))
+	} else {
+		PostMessage(ev.Channel, fmt.Sprintf("@%s Erro ao revogar o convite para o email: %s", ev.Username, mail))
+	}
+}
+
+func SlackDelete(md map[string]string, ev *slack.MessageEvent) {
+	logger.WithFields(logrus.Fields{
+		"prefix": "rtm.IncomingEvents",
+		"text":   ev.Text,
+		"name":   ev.Username,
+		"user":   ev.User,
+	}).Info("Delete user of Slack")
+	mail := StripMailTo(ev.Text)
+	if delUser(mail) == true {
+		PostMessage(ev.Channel, fmt.Sprintf("@%s O email %s foi removido com Sucesso", ev.Username, mail))
+	} else {
+		PostMessage(ev.Channel, fmt.Sprintf("@%s Erro ao remover o email: %s do Slack", ev.Username, mail))
+	}
 }
 
 /*

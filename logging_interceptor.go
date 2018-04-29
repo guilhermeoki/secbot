@@ -5,14 +5,15 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	_ "github.com/mattn/go-sqlite3"
-	"github.com/nlopes/slack"
-	"github.com/sirupsen/logrus"
-	"gopkg.in/olivere/elastic.v6"
 	"regexp"
 	"strconv"
 	"strings"
 	"time"
+
+	_ "github.com/mattn/go-sqlite3"
+	"github.com/nlopes/slack"
+	"github.com/sirupsen/logrus"
+	"gopkg.in/olivere/elastic.v6"
 )
 
 var logging_endpoint = ""
