@@ -24,6 +24,8 @@ func CreditCardInterceptorStart() {
 		"6(?:011|5[0-9]{2})[0-9]{12}"), Handler: CreditCardFoundInterceptor, Continue: false})
 	AddInterceptor(Interceptor{Regex: regexp.MustCompile(
 		"(?:2131|1800|35\\d{3})\\d{11}"), Handler: CreditCardFoundInterceptor, Continue: false})
+	AddInterceptor(Interceptor{Regex: regexp.MustCompile(
+		"\\|[0-9]{4}-[0-9]{4}-[0-9]{4}>-[0-9]{4}"), Handler: CreditCardFoundInterceptor, Continue: false})
 
 }
 
