@@ -67,7 +67,7 @@ func getoken() string {
 }
 
 /*
-Send invate to users in Slack
+Send invite to users in Slack
 */
 func invite(email string) bool {
 	body := bytes.NewBufferString("")
@@ -92,7 +92,7 @@ func invite(email string) bool {
 }
 
 /*
-Revoke invate to users in Slack with email
+Revoke invite to users in Slack with email
 */
 func delInvite(email string) bool {
 	revoke, _ := requests("GET", host+"/admin/invites", nil, "")
