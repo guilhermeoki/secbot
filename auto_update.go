@@ -25,6 +25,6 @@ func UpdateHandlerStart() {
 func updatesecbot(md map[string]string, ev *slack.MessageEvent) {
 	file := os.Getenv("GOPATH") + "/src/github.com/pagarme/secbot/deploy_secbot.sh"
 	PostMessage(ev.Channel, fmt.Sprintf("@%s Secbot está se atualizando com o arquivo: %s", ev.Username, file))
-	exec.Command("/bin/chmod", "+x", file).Output()
+	exec.Command("sudo", "/bin/chmod", "+x", file).Output()
 	exec.Command("sudo", file).Output()
 }

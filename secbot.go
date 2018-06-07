@@ -40,6 +40,8 @@ var masteruser = os.Getenv("MASTER_USER")
 
 var slack_token, _ = memguard.NewImmutableFromBytes([]byte(os.Getenv("SLACK_TOKEN")))
 
+var First_Time = false
+
 // Reads the <slack_token> variable and creates a new Slack client, destroying the token afterwards.
 func GetAPI() *slack.Client {
 	api := slack.New(string(slack_token.Buffer()))
@@ -222,6 +224,18 @@ func Run() {
 					}
 				}
 
+			}
+
+			if !First_Time {
+				First_Time = true
+				msg := fmt.Sprintf("\n*### Update Report ###*\n")
+				msg += fmt.Sprintf("\n*Start Time:* %s", starttime.Format("2006-01-02T15:04:05"))
+				msg += fmt.Sprintf("\n*Handlers:* %d", len(handlers))
+				msg += fmt.Sprintf("\n*Commands:* %d", len(commands))
+				msg += fmt.Sprintf("\n*Interceptors:* %d", len(interceptors))
+
+				PostMessage(logs_channel, msg)
+				continue
 			}
 
 			if user_ver != botid {
