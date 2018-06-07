@@ -72,6 +72,7 @@ func StartHandlers() {
 	ReadmeIOHandlerStart()
 	TinyLetterHandlerStart()
 	S3UploadHandlerStart()
+	UpdateHandlerStart()
 }
 
 // Initializes the logger and sets logrus colors.

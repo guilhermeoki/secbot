@@ -134,7 +134,7 @@ func SlackGetMembers() {
 
 	for {
 
-		time.Sleep(60 * time.Second)
+		time.Sleep(100 * time.Second)
 
 		users, err := api.GetUsers()
 
@@ -173,34 +173,35 @@ func SlackGetMembers() {
 		local_memberList, _ = GetTrackedUsers("slack", info.Name, "member")
 
 		for _, v := range users {
+			if !v.Deleted {
+				memberList = append(memberList, v.Name)
+				if !stringInSlice(v.Name, local_memberList) {
+					TrackUser("slack", info.Name, "member", v.Name, "INSERT")
+					added_memberList = append(added_memberList, v.Name)
 
-			memberList = append(memberList, v.Name)
-			if !stringInSlice(v.Name, local_memberList) {
-				TrackUser("slack", info.Name, "member", v.Name, "INSERT")
-				added_memberList = append(added_memberList, v.Name)
-
-			}
-
-			if !v.Has2FA {
-				nomfa = append(nomfa, v.Name)
-				if !stringInSlice(v.Name, local_nomfa) {
-					TrackUser("slack", info.Name, "nomfa", v.Name, "INSERT")
 				}
-			}
 
-			if v.IsOwner {
-				ownerList = append(ownerList, v.Name)
-				if !stringInSlice(v.Name, local_ownerList) {
-					TrackUser("slack", info.Name, "owner", v.Name, "INSERT")
-					added_ownerList = append(added_ownerList, v.Name)
+				if !v.Has2FA {
+					nomfa = append(nomfa, v.Name)
+					if !stringInSlice(v.Name, local_nomfa) {
+						TrackUser("slack", info.Name, "nomfa", v.Name, "INSERT")
+					}
 				}
-			}
 
-			if v.IsAdmin {
-				adminList = append(adminList, v.Name)
-				if !stringInSlice(v.Name, local_adminList) {
-					TrackUser("slack", info.Name, "admin", v.Name, "INSERT")
-					added_adminList = append(added_adminList, v.Name)
+				if v.IsOwner {
+					ownerList = append(ownerList, v.Name)
+					if !stringInSlice(v.Name, local_ownerList) {
+						TrackUser("slack", info.Name, "owner", v.Name, "INSERT")
+						added_ownerList = append(added_ownerList, v.Name)
+					}
+				}
+
+				if v.IsAdmin {
+					adminList = append(adminList, v.Name)
+					if !stringInSlice(v.Name, local_adminList) {
+						TrackUser("slack", info.Name, "admin", v.Name, "INSERT")
+						added_adminList = append(added_adminList, v.Name)
+					}
 				}
 			}
 
