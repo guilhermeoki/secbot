@@ -9,4 +9,18 @@ jobs:
     working_directory: /go/src/github.com/pagarme/secbot
     steps:
       - checkout
-      - run: go get github.com/pagarme/secbot
+       - run:
+          name: go get secbot repository
+          command: go get github.com/pagarme/secbot
+        - run:
+          name: get Sonarqube
+          command: wget -c http://repo1.maven.org/maven2/org/codehaus/sonar/runner/sonar-runner-dist/2.4/sonar-runner-dist-2.4.zip
+        - run:
+          name: Unzip sonar
+          command: unzip sonar-runner-dist-2.4.zip
+        - run:
+          name: Get sonar password
+          command: echo \nsonar.password=$(echo $SONAR_PASSWORD) >> sonar-project.properties
+        - run:
+          name: run sonar scanner
+          command: ./sonar-runner-2.4/bin/sonar-runner
