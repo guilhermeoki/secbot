@@ -238,9 +238,8 @@ func Run() {
 			}
 
 			if user_ver != botid {
-				fmt.Println(ev.Upload, ev.Channel)
+				
 				if ev.Upload && strings.HasPrefix(ev.Channel, "D") {
-					fmt.Println("Passou")
 					go S3Upload(ev)
 					continue
 				}
