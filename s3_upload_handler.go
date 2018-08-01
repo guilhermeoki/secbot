@@ -3,6 +3,7 @@ package secbot
 import (
 	"bytes"
 	"fmt"
+
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/levigross/grequests"
 	"github.com/nlopes/slack"
@@ -39,54 +40,57 @@ func S3Upload(ev *slack.MessageEvent) {
 	region, _ := GetHandlerConfig("s3", "default_region")
 	bucket, _ := GetHandlerConfig("s3", "default_bucket")
 
-	if len(account) == 0 || len(region) == 0 || len(bucket) == 0 {
-		PostMessage(ev.Channel, fmt.Sprintf("@%s Conta não configurada\n"+
-			"Utilize `s3 set account <account> <region> <bucket>` para setar a conta", ev.File.User))
-		return
+	for _, files := range ev.Files {
+		fmt.Println(files.Name)
+
+		if len(account) == 0 || len(region) == 0 || len(bucket) == 0 {
+			PostMessage(ev.Channel, fmt.Sprintf("@%s Conta não configurada\n"+
+				"Utilize `s3 set account <account> <region> <bucket>` para setar a conta", files.User))
+			return
+		}
+
+		sess, _ := AWSGetSession(account, region)
+
+		s3svc := s3.New(sess)
+
+		/*
+
+			file_name := make([]byte, len(files.Name))
+
+			t := transform.Chain(norm.NFD, transform.RemoveFunc(isMn), norm.NFC)
+			_, _, err := t.Transform(file_name, []byte(files.Name), true)
+
+		*/
+
+		var headers = make(map[string]string)
+
+		headers["Authorization"] = fmt.Sprintf("Bearer %s", slack_token.Buffer())
+
+		println(headers["Authorization"])
+
+		opts := grequests.RequestOptions{Headers: headers}
+
+		resp, _ := grequests.Get(files.URLPrivateDownload, &opts)
+
+		body := bytes.NewReader(resp.Bytes())
+
+		var fname = fmt.Sprintf("%d_%s", rand.Intn(100000), files.Name)
+
+		objinput := s3.PutObjectInput{
+			Body:   body,
+			Bucket: &bucket,
+			Key:    &fname,
+		}
+
+		_, err := s3svc.PutObject(&objinput)
+
+		if err != nil {
+			PostMessage(ev.Channel, fmt.Sprintf("Erro efetuando upload: %s", err.Error()))
+		} else {
+			url := fmt.Sprintf("https://s3.amazonaws.com/%s/%s", bucket, fname)
+			PostMessage(ev.Channel, url)
+		}
 	}
-
-	sess, _ := AWSGetSession(account, region)
-
-	s3svc := s3.New(sess)
-
-	/*
-
-		file_name := make([]byte, len(ev.File.Name))
-
-		t := transform.Chain(norm.NFD, transform.RemoveFunc(isMn), norm.NFC)
-		_, _, err := t.Transform(file_name, []byte(ev.File.Name), true)
-
-	*/
-
-	var headers = make(map[string]string)
-
-	headers["Authorization"] = fmt.Sprintf("Bearer %s", slack_token.Buffer())
-
-	println(headers["Authorization"])
-
-	opts := grequests.RequestOptions{Headers: headers}
-
-	resp, _ := grequests.Get(ev.File.URLPrivateDownload, &opts)
-
-	body := bytes.NewReader(resp.Bytes())
-
-	var fname = fmt.Sprintf("%d_%s", rand.Intn(100000), ev.File.Name)
-
-	objinput := s3.PutObjectInput{
-		Body:   body,
-		Bucket: &bucket,
-		Key:    &fname,
-	}
-
-	_, err := s3svc.PutObject(&objinput)
-
-	if err != nil {
-		PostMessage(ev.Channel, fmt.Sprintf("Erro efetuando upload: %s", err.Error()))
-	} else {
-		url := fmt.Sprintf("https://s3.amazonaws.com/%s/%s", bucket, fname)
-		PostMessage(ev.Channel, url)
-	}
-
 }
 
 /*

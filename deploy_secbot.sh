@@ -1,6 +1,7 @@
 #!/bin/bash -x
 cd
-go get -u github.com/pagarme/secbot
+rm -rf $GOPATH/src/github.com/pagarme/secbot
+go get github.com/pagarme/secbot
 go build $GOPATH/src/github.com/pagarme/secbot/run/main.go
 systemctl stop secbot
 if [ ! -d "$SECBOT_PATH/secbot_backup/" ]; then
