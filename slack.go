@@ -302,7 +302,7 @@ func JoinChannels(notify bool) {
 			}
 		}
 
-		time.Sleep(60 * time.Second)
+		time.Sleep(100 * time.Second)
 
 	}
 
