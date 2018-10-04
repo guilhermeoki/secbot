@@ -2,8 +2,8 @@ package secbot
 
 import (
 	"regexp"
+	"strings"
 
-	_ "github.com/mattn/go-sqlite3"
 	"github.com/nlopes/slack"
 	"github.com/sirupsen/logrus"
 )
@@ -34,11 +34,20 @@ If a credit card is found, delete the message and warn the user it's against PCI
 */
 func CreditCardFoundInterceptor(md map[string]string, ev *slack.MessageEvent) {
 	var user_ver = ""
+	var user_text = ""
 	err := ev.SubMessage
 	if err == nil {
 		user_ver = ev.User
+		user_text = ev.Text
 	} else {
 		user_ver = ev.SubMessage.User
+		user_text = ev.SubMessage.Text
+	}
+	compRegex := []string{"https://", "http://"}
+	for _, cont := range compRegex {
+		if strings.ContainsAny(cont, user_text) {
+			return
+		}
 	}
 	if user_ver != botid {
 		DeleteMessage(ev)
