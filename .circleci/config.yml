@@ -9,4 +9,13 @@ jobs:
     working_directory: /go/src/github.com/pagarme/secbot
     steps:
       - checkout
-      - run: go get github.com/pagarme/secbot
+#      - run:
+#          name: go get secbot repository
+#          command: go get github.com/pagarme/secbot
+      - run:
+          name: Sonar Stuff
+          command: |
+            wget -c https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-3.2.0.1227-linux.zip
+            unzip sonar-scanner-cli-3.2.0.1227-linux.zip 
+            cd sonar-scanner-3.2.0.1227-linux/
+            ./bin/sonar-scanner -Dsonar.login=$SONARQUBE_TOKEN -Dsonar.projectKey=$PROJECTKEY -Dsonar.host.url=$HOST_URL -Dsonar.sources=. -X
